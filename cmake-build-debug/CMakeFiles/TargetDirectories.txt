@@ -1,0 +1,3 @@
+/mnt/c/Users/illus/OneDrive - Technion/Semester 5/Operating Systems/HW1/skeleton_smash/cmake-build-debug/CMakeFiles/skeleton_smash.dir
+/mnt/c/Users/illus/OneDrive - Technion/Semester 5/Operating Systems/HW1/skeleton_smash/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/c/Users/illus/OneDrive - Technion/Semester 5/Operating Systems/HW1/skeleton_smash/cmake-build-debug/CMakeFiles/rebuild_cache.dir
