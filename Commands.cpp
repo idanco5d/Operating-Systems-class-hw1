@@ -590,15 +590,12 @@ void changeToPrevDirCaseMakaf () {
 
 void changeToParentDirCaseDotDot () {
     char* currDir = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,currDir);
-    unsigned int indexLastSlash = 0;
-    for (unsigned int i = 0; i < strlen(currDir); i++) {
-        if (currDir[i] == '/') {
-            indexLastSlash = i;
-        }
-    }
     string newDir = currDir;
-    newDir = newDir.substr(0,indexLastSlash);
-    CHECK_SYSCALL(chdir(newDir.c_str()),chdir);
+    if (chdir("..") == -1) {
+        perror( "smash error: chdir failed" );
+        free(currDir);
+        return;
+    }
     SmallShell& shell = SmallShell::getInstance();
     shell.setPrevDir(currDir);
     free(currDir);
@@ -644,16 +641,17 @@ void ChangeDirCommand::execute() {
 ForegroundCommand::ForegroundCommand(string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), job_list(jobs){}
 
 void ForegroundCommand::execute() {
+    job_list->removeFinishedJobs();
+    shared_ptr<JobsList::JobEntry> jobToForeground;
+    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
+    if (cmd_split.size() > 2 || (cmd_split.size() == 2 && !isNumber(cmd_split[1]))) {
+        //perror("smash error: fg: invalid arguments\n");
+        std::cerr << "smash error: fg: invalid arguments" << std::endl;
+        return;
+    }
     if (!job_list || job_list->isListEmpty()) {
         //perror("smash error: fg: jobs list is empty\n");
         std::cerr << "smash error: fg: jobs list is empty" << std::endl;
-        return;
-    }
-    shared_ptr<JobsList::JobEntry> jobToForeground;
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
-    if (cmd_split.size() > 2 || (cmd_split.size() == 2 && !std::all_of(cmd_split[1].begin(),cmd_split[1].end(),&isDigit))) {
-        //perror("smash error: fg: invalid arguments\n");
-        std::cerr << "smash error: fg: invalid arguments" << std::endl;
         return;
     }
     if (cmd_split.size() == 1) {
