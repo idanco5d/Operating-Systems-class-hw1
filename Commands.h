@@ -22,7 +22,7 @@ protected:
     string cmd_line;
     pid_t pid;
  public:
-  Command(string cmd_line);
+  Command(string cmd_line, pid_t pid = 0);
   virtual ~Command();
   virtual void execute() = 0;
   string getCmdLine() const;
@@ -35,7 +35,7 @@ protected:
 
 class BuiltInCommand : public Command {
  public:
-  BuiltInCommand(string cmd_line);
+  BuiltInCommand(string cmd_line, pid_t pid = 0);
   virtual ~BuiltInCommand()=default;
 };
 
@@ -112,9 +112,9 @@ private:
    int jobPid;
    time_t timeCreated;
    string cmd_line;
-   shared_ptr<Command> cmd;
+   //shared_ptr<Command> cmd;
   public:
-     JobEntry(int jobId, int jobPid, time_t timeCreated, string cmd_line, shared_ptr<Command> cmd);
+     JobEntry(int jobId, int jobPid, time_t timeCreated, string cmd_line);
      ~JobEntry();
      int getJobId() const;
      string getCmdLine() const;
@@ -123,7 +123,7 @@ private:
      JobStatus getJobStatus() const;
      void printJobCmd() const;
      void setJobStatus(JobStatus status);
-     shared_ptr<Command> getCmd() const;
+     //shared_ptr<Command> getCmd() const;
       //to delete!!!!!
 //      void printJob() const;
       //not to delete
@@ -137,7 +137,7 @@ public:
 
   JobsList();
   ~JobsList()=default;
-  void addJob(shared_ptr<Command> cmd, bool isStopped = false);
+  void addJob(int pid, string cmd_line, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -155,6 +155,7 @@ public:
   shared_ptr<JobEntry> getJobByCmd(shared_ptr<Command> cmd);
   void stopJob(shared_ptr<JobEntry> jobToStop);
   // TODO: Add extra methods or modify exisitng ones as needed
+    shared_ptr<JobsList::JobEntry> getJobByPid(int pid);
 };
 
 class JobsCommand : public BuiltInCommand {
@@ -232,7 +233,8 @@ class SmallShell {
  private:
   // TODO: Add your data members
   string shellName;
-  shared_ptr<Command> cmdForeground;
+  int cmdForegroundPid;
+  string cmdForegroundCmdLine;
   SmallShell();
   JobsList jobs_list;
   string prevDir;
@@ -252,9 +254,8 @@ class SmallShell {
   void setShellName(string newName);
   string getShellName();
   pid_t getForegroundProcessPid() const;
-  void addJobToShell(shared_ptr<Command> cmd, bool isStopped=false);
-  shared_ptr<Command> getCmdForeground() const;
-  void setCmdForeground(shared_ptr<Command> cmd);
+  void addJobToShell(int pid, string cmd_line, bool isStopped=false);
+  void setCmdForeground(int pid, string cmd_line);
   void handleOneCommand(shared_ptr<Command> cmd, string cmd_line);
   void handleBGCommand(shared_ptr<Command> cmd, string cmd_line);
   void handleExternalCommand(shared_ptr<Command> cmd, string cmd_line);
@@ -265,6 +266,7 @@ class SmallShell {
   void resumeJobInShell(shared_ptr<JobsList::JobEntry> job);
   const string& getPrevDir() const;
   void setPrevDir(string newDir);
+  string getForegroundProcessCmdLine() const;
 };
 
 class QuitException : public std::exception {};

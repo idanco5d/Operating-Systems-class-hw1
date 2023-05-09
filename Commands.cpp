@@ -227,7 +227,7 @@ std::vector<string> splitStringIntoWords(const string& str)
 
 /////////////////////////// SMALLSHELL CLASS SECTION ///////////////////////////
 
-SmallShell::SmallShell() : shellName("smash"), cmdForeground(nullptr), jobs_list(), prevDir(""){
+SmallShell::SmallShell() : shellName("smash"), cmdForegroundPid(0),cmdForegroundCmdLine(""), jobs_list(), prevDir(""){
 // TODO: add your implementation
 }
 
@@ -239,16 +239,13 @@ void SmallShell::setShellName(string newName) {
     this->shellName = newName;
 }
 
-void SmallShell::addJobToShell(shared_ptr<Command> cmd, bool isStopped) {
-    jobs_list.addJob(cmd, isStopped);
+void SmallShell::addJobToShell(int pid, string cmd_line, bool isStopped) {
+    jobs_list.addJob(pid, cmd_line, isStopped);
 }
 
-shared_ptr<Command> SmallShell::getCmdForeground() const {
-    return cmdForeground;
-}
-
-void SmallShell::setCmdForeground(shared_ptr<Command> cmd) {
-    cmdForeground = cmd;
+void SmallShell::setCmdForeground(int pid, string cmd_line) {
+    cmdForegroundPid = pid;
+    cmdForegroundCmdLine = cmd_line;
 }
 
 /**
@@ -340,13 +337,12 @@ string pipeIOStringInCommand(string cmd_line, bool* isTwoCharsCommand, int* pipe
 
 void SmallShell::handleBGCommand(shared_ptr<Command> cmd, string cmd_line) {
     pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(),fork,pid);
-    cmd->setPid(pid);
     if (pid > 0) {
         //to delete!!!
 //        std::cout << "In handleBGcommand we are about to add: " << std::endl;
 //        ((Externalshared_ptr<Command>)cmd)->printExtCmd();
         //not to delete
-        jobs_list.addJob(cmd);
+        jobs_list.addJob(pid, cmd_line);
     }
     else {
         CHECK_SYSCALL(setpgrp(), setpgrp);
@@ -360,11 +356,12 @@ void SmallShell::handleBGCommand(shared_ptr<Command> cmd, string cmd_line) {
 void SmallShell::handleExternalCommand(shared_ptr<Command> cmd, string cmd_line) {
     pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(),fork,pid);
     if (pid > 0) {
-        cmdForeground = cmd;
-        cmd->setPid(pid);
+        cmdForegroundPid = pid;
+        cmdForegroundCmdLine = cmd_line;
         int status;
         CHECK_SYSCALL(waitpid(pid, &status, WUNTRACED),waitpid);
-        cmdForeground = nullptr;
+        cmdForegroundPid = 0;
+        cmdForegroundCmdLine.clear();
         return;
     }
     else {
@@ -492,10 +489,7 @@ string SmallShell::getShellName()  {
 }
 
 pid_t SmallShell::getForegroundProcessPid() const {
-    if (cmdForeground) {
-        return cmdForeground->getPid();
-    }
-    return 0;
+    return cmdForegroundPid;
 }
 
 void SmallShell::stopJobInShell(shared_ptr<JobsList::JobEntry> job) {
@@ -514,11 +508,15 @@ void SmallShell::setPrevDir(string newDir) {
     prevDir = newDir;
 }
 
+string SmallShell::getForegroundProcessCmdLine() const {
+    return cmdForegroundCmdLine;
+}
+
 /////////////////////////// END OF SMALLSHELL CLASS SECTION ///////////////////////////
 
 /////////////////////////// GENERAL COMMANDS SECTION ///////////////////////////
 
-Command::Command(string cmd_line) : cmd_line(cmd_line), pid(0) {
+Command::Command(string cmd_line, pid_t pid) : cmd_line(cmd_line), pid(pid) {
 
 }
 
@@ -534,7 +532,7 @@ pid_t Command::getPid() const {
     return pid;
 }
 
-BuiltInCommand::BuiltInCommand(string cmd_line) : Command(cmd_line) {
+BuiltInCommand::BuiltInCommand(string cmd_line, pid_t pid) : Command(cmd_line,pid) {
 }
 
 Command::~Command()  {
@@ -672,7 +670,7 @@ void ForegroundCommand::execute() {
     }
     jobToForeground->printJobCmd();
     SmallShell& shell = SmallShell::getInstance();
-    shell.setCmdForeground(jobToForeground->getCmd());
+    shell.setCmdForeground(jobToForeground->getJobPid(),jobToForeground->getCmdLine());
     if (jobToForeground->getJobStatus() == STOPPED) {
         shell.resumeJobInShell(jobToForeground);
 //        CHECK_SYSCALL(kill(jobToForeground->getJobPid(),SIGCONT),kill);
@@ -1047,8 +1045,8 @@ bool JobsList::isCmdInList(shared_ptr<Command> cmd) const {
     if (!cmd) {
         return false;
     }
-    for (auto it = job_list.begin(); it != job_list.end(); it++) {
-        if ((*it)->getCmd()->getPid() == cmd->getPid()) {
+    for (const auto & it : job_list) {
+        if (it->getJobPid() == cmd->getPid()) {
             return true;
         }
     }
@@ -1059,46 +1057,32 @@ shared_ptr<JobsList::JobEntry> JobsList::getJobByCmd(shared_ptr<Command> cmd) {
     if (!cmd) {
         return nullptr;
     }
-    for (auto it = job_list.begin(); it != job_list.end(); it++) {
-        if ((*it)->getCmd()->getPid() == cmd->getPid()) {
-            return *it;
+    for (auto & it : job_list) {
+        if (it->getJobPid() == cmd->getPid()) {
+            return it;
         }
     }
     return nullptr;
 }
 
-void JobsList::addJob(shared_ptr<Command> cmd, bool isStopped) {
-        if (isCmdInList(cmd)) {
-            shared_ptr<JobsList::JobEntry> job = getJobByCmd(cmd);
-            if (!job) {
-                //std::cout << "We are in trouble" << std::endl;
-                return;
-            }
-            if (isStopped) {
-                stopJob(job);
-            }
-            else {
-                job->setJobStatus(RUNNING);
-            }
-            return;
-        }
-        time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time, current_time);
-        shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, cmd->getPid(), current_time, cmd->getCmdLine(), cmd);
-        //to delete!!!
-//        std::cout << "The added job is:" <<std::endl;
-//        newJob->printJob();
-        //not to delete
+void JobsList::addJob(int pid, string cmd_line, bool isStopped) {
+    shared_ptr<JobsList::JobEntry> job = getJobByPid(pid);
+    if (job) {
         if (isStopped) {
-            stopJob(newJob);
+            stopJob(job);
         }
-        maximalJobId++;
-        job_list.push_back(newJob);
-        //to delete!!!
-//        std::cout << "After adding, the job list is:" <<std::endl;
-//        for (auto it = job_list.begin(); it != job_list.end(); it++) {
-//            (*it)->printJob();
-//        }
-        //not to delete
+        else {
+            job->setJobStatus(RUNNING);
+        }
+        return;
+    }
+    time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time, current_time);
+    shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, pid, current_time, cmd_line);
+    if (isStopped) {
+        stopJob(newJob);
+    }
+    maximalJobId++;
+    job_list.push_back(newJob);
 }
 
 void JobsList::resumeJob(shared_ptr<JobsList::JobEntry> job) {
@@ -1113,16 +1097,13 @@ void JobsList::resumeJob(shared_ptr<JobsList::JobEntry> job) {
 }
 
 void JobsList::printJobsList() {
-    for (auto it = job_list.begin(); it != job_list.end(); it++) {
-        //to delete!!!!
-//        (*it)->printJob();
-        //not to delete
-        string str_cmd_line = (*it)->getCmdLine();
+    for (const auto& it : job_list) {
+        string str_cmd_line = it->getCmdLine();
         time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,current_time);
-        int job_run_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(difftime(current_time,(*it)->getTimeCreated()),difftime,job_run_time);
-        std::cout << "[" << to_string((*it)->getJobId()) << "] " + str_cmd_line + " : " + to_string((*it)->getJobPid()) + " " +
+        int job_run_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(difftime(current_time,it->getTimeCreated()),difftime,job_run_time);
+        std::cout << "[" << to_string(it->getJobId()) << "] " + str_cmd_line + " : " + to_string(it->getJobPid()) + " " +
                                                          to_string(job_run_time) + " secs";
-        if ((*it)->getJobStatus() == STOPPED) {
+        if (it->getJobStatus() == STOPPED) {
             std::cout << " (stopped)";
         }
         std::cout << endl;
@@ -1131,10 +1112,10 @@ void JobsList::printJobsList() {
 
 void JobsList::killAllJobs(){
 
-    for (auto  it = job_list.begin(); it != job_list.end(); ++it)
+    for (auto & it : job_list)
     {
-        CHECK_SYSCALL(kill((*it)->getJobPid(),15),kill);
-        CHECK_SYSCALL(waitpid((*it)->getJobPid(), nullptr,WUNTRACED),waitpid);
+        CHECK_SYSCALL(kill(it->getJobPid(),15),kill);
+        CHECK_SYSCALL(waitpid(it->getJobPid(), nullptr,WUNTRACED),waitpid);
 //        shared_ptr<JobsList::JobEntry> job = *it;
 //        delete job;
     }
@@ -1143,10 +1124,10 @@ void JobsList::killAllJobs(){
 
 void JobsList::initializeMaximalJobId() {
     int maxJobId = 0;
-    for (auto  it = job_list.begin(); it != job_list.end(); it++)
+    for (auto & it : job_list)
     {
-        if ((*it)->getJobId() > maxJobId) {
-            maxJobId = (*it)->getJobId();
+        if (it->getJobId() > maxJobId) {
+            maxJobId = it->getJobId();
         }
     }
     maximalJobId = maxJobId;
@@ -1172,10 +1153,10 @@ void JobsList::removeFinishedJobs(){
 
 
 shared_ptr<JobsList::JobEntry> JobsList::getJobById(int jobId) {
-    for (auto  it = job_list.begin(); it != job_list.end(); ++it)
+    for (auto & it : job_list)
     {
-        if((*it)->getJobId()==jobId){
-            return *it;
+        if(it->getJobId()==jobId){
+            return it;
         }
     }
     return nullptr;
@@ -1215,9 +1196,9 @@ bool JobsList::isListEmpty() const {
 }
 
 bool JobsList::isJobInTheList(int job_id) {
-    for (auto  it = job_list.begin(); it != job_list.end();)
+    for (auto & it : job_list)
     {
-        if((*it)->getJobId()==job_id)
+        if(it->getJobId()==job_id)
         {
             return true;
         }
@@ -1231,8 +1212,8 @@ std::vector<shared_ptr<JobsList::JobEntry>> JobsList::get_Job_List() {
 }
 
 void JobsList::print_jobs_for_quit_command() {
-    for (auto it = job_list.begin(); it != job_list.end(); it++) {
-        std::cout << to_string((*it)->getJobPid()) << ": " << (*it)->getCmdLine() << std::endl;
+    for (auto & it : job_list) {
+        std::cout << to_string(it->getJobPid()) << ": " << it->getCmdLine() << std::endl;
     }
 }
 
@@ -1241,11 +1222,18 @@ void JobsList::stopJob(shared_ptr<JobEntry> jobToStop) {
     stoppedJobs.push_back(jobToStop);
 }
 
+shared_ptr<JobsList::JobEntry> JobsList::getJobByPid(int pid) {
+    for (auto job : job_list) {
+        if (job->getJobPid() == pid) {
+            return job;
+        }
+    }
+    return nullptr;
+}
+
 /////////////////////////// JOB ENTRY SECTION ///////////////////////////
 
-JobsList::JobEntry::JobEntry(int jobId, int jobPid, time_t timeCreated, string cmd_line, shared_ptr<Command> cmd) : status(RUNNING), jobId(jobId), jobPid(jobPid), cmd_line(cmd_line) {
-    cmd->setPid(jobPid);
-    this->cmd = cmd;
+JobsList::JobEntry::JobEntry(int jobId, int jobPid, time_t timeCreated, string cmd_line) : status(RUNNING), jobId(jobId), jobPid(jobPid), cmd_line(cmd_line) {
     this->timeCreated = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,this->timeCreated);
 }
 
@@ -1279,10 +1267,6 @@ void JobsList::JobEntry::setJobStatus(JobStatus status) {
 
 JobStatus JobsList::JobEntry::getJobStatus() const {
     return status;
-}
-
-shared_ptr<Command> JobsList::JobEntry::getCmd() const {
-    return cmd;
 }
 
 //to delete!!!

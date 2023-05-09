@@ -28,15 +28,14 @@ void ctrlZHandler(int sig_num) {
 
     SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-Z" << std::endl;
-    shared_ptr<Command> cmd = shell.getCmdForeground();
-    if (cmd) {
-        pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmd->getPid(),nullptr,WNOHANG),waitpid,waitReturnValue);
+    int cmdPid = shell.getForegroundProcessPid();
+    if (cmdPid != 0) {
+        pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
-            CHECK_SYSCALL(kill(cmd->getPid(),SIGSTOP),kill);
-            std::cout << "smash: process "+ to_string(cmd->getPid()) + " was stopped" << std::endl;
-            cmd->setPid(shell.getForegroundProcessPid());
-            shell.addJobToShell(cmd,true);
-            shell.setCmdForeground(nullptr);
+            CHECK_SYSCALL(kill(cmdPid,SIGSTOP),kill);
+            std::cout << "smash: process "+ to_string(cmdPid) + " was stopped" << std::endl;
+            shell.addJobToShell(cmdPid,shell.getForegroundProcessCmdLine(),true);
+            shell.setCmdForeground(0,"");
         }
     }
 }
@@ -45,14 +44,14 @@ void ctrlCHandler(int sig_num) {
   // TODO: Add your implementation
     SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-C" << std::endl;
-    shared_ptr<Command> cmd = shell.getCmdForeground();
-    if (cmd) {
-        pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmd->getPid(),nullptr,WNOHANG),waitpid,waitReturnValue);
+    int cmdPid = shell.getForegroundProcessPid();
+    if (cmdPid) {
+        pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
-            CHECK_SYSCALL(kill(shell.getForegroundProcessPid(),SIGKILL),kill);
-            std::cout << "smash: process "+ to_string(cmd->getPid()) + " was killed" << std::endl;
+            CHECK_SYSCALL(kill(cmdPid,SIGKILL),kill);
+            std::cout << "smash: process "+ to_string(cmdPid) + " was killed" << std::endl;
             //delete cmd;
-            shell.setCmdForeground(nullptr);
+            shell.setCmdForeground(0,"");
         }
     }
 }
