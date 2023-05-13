@@ -25,10 +25,9 @@ using namespace std;
 
 void ctrlZHandler(int sig_num) {
 	// TODO: Add your implementation
-
     SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-Z" << std::endl;
-    int cmdPid = shell.getForegroundProcessPid();
+    pid_t cmdPid = shell.getForegroundProcessPid();
     if (cmdPid != 0) {
         pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
@@ -44,8 +43,8 @@ void ctrlCHandler(int sig_num) {
   // TODO: Add your implementation
     SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-C" << std::endl;
-    int cmdPid = shell.getForegroundProcessPid();
-    if (cmdPid) {
+    pid_t cmdPid = shell.getForegroundProcessPid();
+    if (cmdPid != 0) {
         pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
             CHECK_SYSCALL(kill(cmdPid,SIGKILL),kill);

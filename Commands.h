@@ -109,16 +109,16 @@ private:
    // TODO: Add your data members
    JobStatus status;
    int jobId;
-   int jobPid;
+   pid_t jobPid;
    time_t timeCreated;
    string cmd_line;
    //shared_ptr<Command> cmd;
   public:
-     JobEntry(int jobId, int jobPid, time_t timeCreated, string cmd_line);
+     JobEntry(int jobId, pid_t jobPid, time_t timeCreated, string cmd_line);
      ~JobEntry();
      int getJobId() const;
      string getCmdLine() const;
-     int getJobPid() const;
+     pid_t getJobPid() const;
      time_t getTimeCreated() const;
      JobStatus getJobStatus() const;
      void printJobCmd() const;
@@ -137,7 +137,7 @@ public:
 
   JobsList();
   ~JobsList()=default;
-  void addJob(int pid, string cmd_line, bool isStopped = false);
+  void addJob(pid_t pid, string cmd_line, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -146,16 +146,17 @@ public:
   shared_ptr<JobEntry>  getLastJob(int* lastJobId);
   shared_ptr<JobEntry> getLastStoppedJob(int *jobId);
   bool isListEmpty() const;
-  void resumeJob(shared_ptr<JobEntry> job);
+  void resumeJob(shared_ptr<JobEntry> job, bool toCont = true);
   bool isJobInTheList(int job_id);
-  std::vector<shared_ptr<JobEntry>> get_Job_List();
+  std::vector<shared_ptr<JobEntry>>& get_Job_List();
   void print_jobs_for_quit_command();
   void initializeMaximalJobId();
   bool isCmdInList(shared_ptr<Command> cmd) const;
   shared_ptr<JobEntry> getJobByCmd(shared_ptr<Command> cmd);
   void stopJob(shared_ptr<JobEntry> jobToStop);
+  void removeFinishedStoppedJobs();
   // TODO: Add extra methods or modify exisitng ones as needed
-    shared_ptr<JobsList::JobEntry> getJobByPid(int pid);
+    shared_ptr<JobsList::JobEntry> getJobByPid(pid_t pid);
 };
 
 class JobsCommand : public BuiltInCommand {
@@ -233,7 +234,7 @@ class SmallShell {
  private:
   // TODO: Add your data members
   string shellName;
-  int cmdForegroundPid;
+  pid_t cmdForegroundPid;
   string cmdForegroundCmdLine;
   SmallShell();
   JobsList jobs_list;
@@ -254,8 +255,8 @@ class SmallShell {
   void setShellName(string newName);
   string getShellName();
   pid_t getForegroundProcessPid() const;
-  void addJobToShell(int pid, string cmd_line, bool isStopped=false);
-  void setCmdForeground(int pid, string cmd_line);
+  void addJobToShell(pid_t pid, string cmd_line, bool isStopped=false);
+  void setCmdForeground(pid_t pid, string cmd_line);
   void handleOneCommand(shared_ptr<Command> cmd, string cmd_line);
   void handleBGCommand(shared_ptr<Command> cmd, string cmd_line);
   void handleExternalCommand(shared_ptr<Command> cmd, string cmd_line);
@@ -263,7 +264,7 @@ class SmallShell {
   void handleIoCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO);
   void handlePipeCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO);
   void stopJobInShell(shared_ptr<JobsList::JobEntry> job);
-  void resumeJobInShell(shared_ptr<JobsList::JobEntry> job);
+  void resumeJobInShell(shared_ptr<JobsList::JobEntry> job, bool toCont = true);
   const string& getPrevDir() const;
   void setPrevDir(string newDir);
   string getForegroundProcessCmdLine() const;

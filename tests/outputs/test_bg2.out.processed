@@ -7,18 +7,18 @@ smash> smash> smash> smash> sleep 144 : 4
 smash> [1] sleep 144 : 2 X secs
 [2] sleep 244& : 3 X secs
 smash> smash: got ctrl-Z
-smash: process 34748 was stopped
+smash: process 5 was stopped
 smash> smash: got ctrl-Z
-smash: process 34891 was stopped
+smash: process 14435 was stopped
 smash> smash> sleep 444 : 4
 smash> [1] sleep 144 : 2 X secs
 [2] sleep 244& : 3 X secs
-[3] sleep 344 : 34748 X secs (stopped)
-[4] sleep 444 : 34891 X secs
-[5] sleep 544& : 31431 X secs
+[3] sleep 344 : 5 X secs (stopped)
+[4] sleep 444 : 14435 X secs
+[5] sleep 544& : 14494 X secs
 smash> smash: sending SIGKILL signal to 5 jobs:
 2: sleep 144
 3: sleep 244&
-34748: sleep 344
-34891: sleep 444
-31431: sleep 544&
+5: sleep 344
+14435: sleep 444
+14494: sleep 544&

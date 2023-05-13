@@ -14,3 +14,6 @@ smash error: kill: job-id 1 does not exist
 smash error: kill: invalid arguments
 smash error: kill: invalid arguments
 smash error: kill: invalid arguments
+smash error: waitpid failed: No child processes
+smash error: waitpid failed: No child processes
+smash error: waitpid failed: No child processes

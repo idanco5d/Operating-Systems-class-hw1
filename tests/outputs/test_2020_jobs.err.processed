@@ -14,4 +14,3 @@ smash error: fg: job-id 4 does not exist
 smash error: bg: job-id 2 does not exist
 smash error: fg: job-id 1 does not exist
 
-runner: Timeout, killing child
