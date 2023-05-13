@@ -1,0 +1,8 @@
+smash> submitted by Eran
+smash> smash> smash> smash> sleep 200& : 9119
+smash: got ctrl-Z
+smash: process 9119 was stopped
+smash> [1] sleep 100& : 9118 2 secs
+[2] sleep 200& : 9119 2 secs (stopped)
+[3] sleep 300& : 9120 2 secs
+smash> 

@@ -1,0 +1,5 @@
+smash> smash> smash> signal number 1 was sent to pid 9328
+smash> received signal number: 1
+smash> smash: sending SIGKILL signal to 1 jobs:
+9328: ./printSignals.exe &
+received signal number: 15

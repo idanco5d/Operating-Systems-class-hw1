@@ -1,5 +1,5 @@
 smash> smash: got ctrl-Z
-smash: process 2 was stopped
+smash: process 8 was stopped
 smash> smash: got ctrl-Z
 smash: process 3 was stopped
 smash> smash: got ctrl-Z
@@ -8,24 +8,24 @@ smash> smash: got ctrl-Z
 smash: process 5 was stopped
 smash> smash: got ctrl-Z
 smash: process 6 was stopped
-smash> [8] sleep 877 : 2 X secs (stopped)
-[2] sleep 277 : 3 X secs (stopped)
-[3] sleep 377 : 4 X secs (stopped)
-[4] sleep 477 : 5 X secs (stopped)
-[5] sleep 577 : 6 X secs (stopped)
-smash> sleep 377 : 7
-smash> sleep 477 : 7
-smash> sleep 277 : 8
-smash> sleep 577 : 7
-smash> sleep 877 : 8
-smash> [8] sleep 877 : 2 X secs
-[2] sleep 277 : 3 X secs
-[3] sleep 377 : 4 X secs
-[4] sleep 477 : 5 X secs
-[5] sleep 577 : 6 X secs
+smash> [7] sleep 799 : 8 X secs (stopped)
+[8] sleep 899 : 3 X secs (stopped)
+[3] sleep 399 : 4 X secs (stopped)
+[4] sleep 499 : 5 X secs (stopped)
+[5] sleep 599 : 6 X secs (stopped)
+smash> sleep 399 : 7
+smash> sleep 499 : 7
+smash> sleep 899 : 8
+smash> sleep 599 : 9
+smash> sleep 799 : 8
+smash> [7] sleep 799 : 8 X secs
+[8] sleep 899 : 3 X secs
+[3] sleep 399 : 4 X secs
+[4] sleep 499 : 5 X secs
+[5] sleep 599 : 6 X secs
 smash> smash: sending SIGKILL signal to 5 jobs:
-2: sleep 877
-3: sleep 277
-4: sleep 377
-5: sleep 477
-6: sleep 577
+8: sleep 799
+3: sleep 899
+4: sleep 399
+5: sleep 499
+6: sleep 599

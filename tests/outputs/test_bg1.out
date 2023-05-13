@@ -1,0 +1,7 @@
+smash> smash: got ctrl-Z
+smash: process 8862 was stopped
+smash> [1] sleep 100 : 8862 0 secs (stopped)
+smash> sleep 100 : 0
+smash> [1] sleep 100 : 8862 0 secs
+smash> smash: sending SIGKILL signal to 1 jobs:
+8862: sleep 100

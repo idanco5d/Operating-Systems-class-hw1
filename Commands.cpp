@@ -658,6 +658,7 @@ void ForegroundCommand::execute() {
     int status;
     shell.setCmdForeground(jobToForeground->getJobPid(),jobToForeground->getCmdLine());
     CHECK_SYSCALL(waitpid(jobToForeground->getJobPid(),&status,WUNTRACED),waitpid);
+    shell.setCmdForeground(0,"");
     if (!WIFSTOPPED(status)) {
         job_list->removeJobById(jobToForeground->getJobId());
     }
@@ -686,7 +687,7 @@ shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argument
         }
     }
     else {
-        job = job_list->getLastStoppedJob(nullptr);
+        job = job_list->getLastStoppedJob();
         if (!job) {
             std::cerr << "smash error: bg: there is no stopped jobs to resume" << std::endl;
         }
@@ -1163,7 +1164,7 @@ shared_ptr<JobsList::JobEntry> JobsList::getLastJob(int *lastJobId) {
     return *job_list.rbegin();
 }
 
-shared_ptr<JobsList::JobEntry> JobsList::getLastStoppedJob(int *lastJobId) {
+shared_ptr<JobsList::JobEntry> JobsList::getLastStoppedJob() {
     return stoppedJobs.empty() ? nullptr : stoppedJobs.back();
 }
 

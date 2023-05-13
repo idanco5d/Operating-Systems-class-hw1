@@ -144,7 +144,7 @@ public:
   shared_ptr<JobEntry>  getJobById(int jobId);
   void removeJobById(int jobId);
   shared_ptr<JobEntry>  getLastJob(int* lastJobId);
-  shared_ptr<JobEntry> getLastStoppedJob(int *jobId);
+  shared_ptr<JobEntry> getLastStoppedJob();
   bool isListEmpty() const;
   void resumeJob(shared_ptr<JobEntry> job, bool toCont = true);
   bool isJobInTheList(int job_id);
