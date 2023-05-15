@@ -1,20 +1,20 @@
-==28844== Memcheck, a memory error detector
-==28844== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==28844== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==28844== Command: /mnt/c/Users/illus/os/hw/1/smash
-==28844== Parent PID: 28834
-==28844== 
-==28844== 
-==28844== FILE DESCRIPTORS: 4 open (3 std) at exit.
-==28844== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_input_almog.valgrind
-==28844==    <inherited from parent>
-==28844== 
-==28844== 
-==28844== HEAP SUMMARY:
-==28844==     in use at exit: 0 bytes in 0 blocks
-==28844==   total heap usage: 40 allocs, 40 frees, 80,206 bytes allocated
-==28844== 
-==28844== All heap blocks were freed -- no leaks are possible
-==28844== 
-==28844== For lists of detected and suppressed errors, rerun with: -s
-==28844== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==21824== Memcheck, a memory error detector
+==21824== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==21824== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==21824== Command: /mnt/c/Users/illus/os/hw/1/smash
+==21824== Parent PID: 21818
+==21824== 
+==21824== 
+==21824== FILE DESCRIPTORS: 4 open (3 std) at exit.
+==21824== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_input_almog.valgrind
+==21824==    <inherited from parent>
+==21824== 
+==21824== 
+==21824== HEAP SUMMARY:
+==21824==     in use at exit: 0 bytes in 0 blocks
+==21824==   total heap usage: 50 allocs, 50 frees, 80,619 bytes allocated
+==21824== 
+==21824== All heap blocks were freed -- no leaks are possible
+==21824== 
+==21824== For lists of detected and suppressed errors, rerun with: -s
+==21824== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

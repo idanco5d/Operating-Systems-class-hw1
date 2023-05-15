@@ -14,8 +14,6 @@
 #include <fcntl.h>
 #include <iomanip>
 
-using namespace std;
-
 const std::string WHITESPACE = " \n\r\t\f\v";
 
 #if 0
@@ -103,7 +101,7 @@ bool _isBackgroundComamnd(const char* cmd_line) {
 
 void _removeBackgroundSign(string& str) {
   // find last character other than spaces
-  unsigned int idx = str.find_last_not_of(WHITESPACE);
+  size_t idx = str.find_last_not_of(WHITESPACE);
   // if all characters are spaces then return
   if (idx == string::npos) {
     return;
@@ -114,85 +112,11 @@ void _removeBackgroundSign(string& str) {
   }
   str = str.substr(0,idx);
   str = _trim(str);
-//  // replace the & (background sign) with space and then remove all tailing spaces.
-//  str[idx] = ' ';
-//  // truncate the command line string up to the last non-space character
-//  str[str.find_last_not_of(WHITESPACE, idx) + 1] = 0;
 }
 
 //////////////////////////////////// END OF COURSE STAFF FUNCTIONS ////////////////////////////////////
 
 //////////////////////////////////// HELPER FUNCTIONS SECTION ////////////////////////////////////
-
-//int findAmountOfSpaces (string str) {
-//    int amountOfSpaces = 0;
-//    bool isPrevSpace = false;
-//    for (int i = 0; (unsigned int)i < str.length(); i++) {
-//        if (WHITESPACE.find(str[i]) != std::string::npos) {
-//            if (!isPrevSpace) {
-//                amountOfSpaces++;
-//            }
-//            isPrevSpace = true;
-//        }
-//        else {
-//            isPrevSpace = false;
-//        }
-//    }
-//    return amountOfSpaces;
-//}
-//
-//string getCmd_s(string cmd_line) {
-//    return _trim(cmd_line);
-//}
-//
-//string getFirstWord(string cmd_line) {
-//    string cmd_s = getCmd_s(cmd_line);
-//    return cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-//}
-//
-//string getSecondArg(string cmd_line) {
-//    string cmd_s = getCmd_s(cmd_line);
-//    string firstWord = getFirstWord(cmd_line);
-//    string cmdName = cmd_s.substr(0, cmd_s.find_first_of(" "));
-//    string fromSecondWordOfCmd_s;
-//    string secondArg;
-//    if (cmd_s.length() > firstWord.length()) {
-//        fromSecondWordOfCmd_s = _trim(cmd_s.substr(cmdName.length()+1,cmd_s.length()-cmdName.length()-1));
-//        secondArg = _trim(cmd_s.substr(cmd_s.find_first_of(" ")+1, fromSecondWordOfCmd_s.find_first_of(" ")));
-//    }
-//    return secondArg;
-//}
-
-bool isBuiltInCommand (const string& firstWord) {
-    if (firstWord== "chprompt") {
-        return true;
-    }
-    else if (firstWord == "pwd") {
-        return true;
-    }
-    else if (firstWord == "showpid") {
-        return true;
-    }
-    else if (firstWord == "cd") {
-        return true;
-    }
-    else if (firstWord == "jobs") {
-        return true;
-    }
-    else if (firstWord == "fg") {
-        return true;
-    }
-    else if (firstWord == "bg") {
-        return true;
-    }
-    else if (firstWord == "quit") {
-        return true;
-    }
-    else if (firstWord == "kill") {
-        return true;
-    }
-    return false;
-}
 
 bool isDigit(char c) {
     if (c>='0' && c<='9') {
@@ -228,15 +152,11 @@ std::vector<string> splitStringIntoWords(const string& str)
 
 /////////////////////////// SMALLSHELL CLASS SECTION ///////////////////////////
 
-SmallShell::SmallShell() : shellName("smash"), cmdForegroundPid(0), jobs_list(), prevDir(""){
+SmallShell::SmallShell() : shellName("smash"), cmdForegroundPid(0), jobs_list(){
 // TODO: add your implementation
 }
 
-//SmallShell::~SmallShell() {
-//// TODO: add your implementation
-//}
-
-void SmallShell::setShellName(string newName) {
+void SmallShell::setShellName(const string& newName) {
     this->shellName = newName;
 }
 
@@ -244,9 +164,9 @@ void SmallShell::addJobToShell(pid_t pid, string cmd_line, bool isStopped) {
     jobs_list.addJob(pid, cmd_line, isStopped);
 }
 
-void SmallShell::setCmdForeground(pid_t pid, string cmd_line) {
+void SmallShell::setCmdForeground(pid_t pid, const string& cmd_line) {
     cmdForegroundPid = pid;
-    cmdForegroundCmdLine = cmd_line;
+    cmdForegroundCmdLine = std::move(cmd_line);
 }
 
 /**
@@ -266,45 +186,44 @@ shared_ptr<Command> SmallShell::CreateCommand(const string& cmd_line) {
       return nullptr;
   }
   else if (cmd_words[0] == "pwd") {
-    return std::make_shared<GetCurrDirCommand>(cmd_line_for_builtin);
+    return std::make_shared<GetCurrDirCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "showpid") {
-    return std::make_shared<ShowPidCommand>(cmd_line_for_builtin);
+    return std::make_shared<ShowPidCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "cd") {
       if (cmd_words.size() > 2) {
-          //perror("smash error: cd: too many arguments\n");
           std::cerr << "smash error: cd: too many arguments" << std::endl;
           return nullptr;
       }
-      return std::make_shared<ChangeDirCommand>(cmd_line_for_builtin);
+      return std::make_shared<ChangeDirCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "jobs") {
-      return std::make_shared<JobsCommand>(cmd_line_for_builtin);
+      return std::make_shared<JobsCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "fg") {
-      return std::make_shared<ForegroundCommand>(cmd_line_for_builtin);
+      return std::make_shared<ForegroundCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "bg") {
-      return std::make_shared<BackgroundCommand>(cmd_line_for_builtin);
+      return std::make_shared<BackgroundCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "quit") {
-      return std::make_shared<QuitCommand>(cmd_line_for_builtin);
+      return std::make_shared<QuitCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "kill") {
-      return std::make_shared<KillCommand>(cmd_line_for_builtin);
+      return std::make_shared<KillCommand>(cmd_line_for_builtin, cmd_words);
   }
   else if (cmd_words[0] == "setcore") {
-      return std::make_shared<SetcoreCommand>(cmd_line);
+      return std::make_shared<SetcoreCommand>(cmd_line, cmd_words);
   }
   else if (cmd_words[0] == "getfileinfo") {
-      return std::make_shared<GetFileTypeCommand>(cmd_line);
+      return std::make_shared<GetFileTypeCommand>(cmd_line, cmd_words);
   }
   else if (cmd_words[0] == "chmod") {
-      return std::make_shared<ChmodCommand>(cmd_line);
+      return std::make_shared<ChmodCommand>(cmd_line, cmd_words);
   }
   else {
-      return std::make_shared<ExternalCommand>(cmd_line);
+      return std::make_shared<ExternalCommand>(cmd_line, cmd_words);
   }
   return nullptr;
 }
@@ -336,59 +255,11 @@ string pipeIOStringInCommand(string cmd_line, bool* isTwoCharsCommand, int* pipe
     return pipeIOString;
 }
 
-void SmallShell::handleBGCommand(shared_ptr<Command> cmd, string cmd_line) {
-    pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(),fork,pid);
-    if (pid > 0) {
-        jobs_list.addJob(pid, cmd_line);
-    }
-    else {
-        CHECK_SYSCALL(setpgrp(), setpgrp);
-        cmd->execute();
-        throw QuitException();
-    }
-}
-
-void SmallShell::handleExternalCommand(shared_ptr<Command> cmd, string cmd_line) {
-    pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(),fork,pid);
-    if (pid > 0) {
-        setCmdForeground(pid,cmd_line);
-        int status;
-        CHECK_SYSCALL(waitpid(pid, &status, WUNTRACED),waitpid);
-        setCmdForeground(0,"");
-        return;
-    }
-    else {
-        CHECK_SYSCALL(setpgrp(),setpgrp);
-        cmd->execute();
-        throw QuitException();
-    }
-}
-
 void SmallShell::handleOneCommand(shared_ptr<Command> cmd, string cmd_line) {
     if (!cmd) {
         return;
     }
-    string cmd_line_copy = cmd_line;
-    _removeBackgroundSign(cmd_line_copy);
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line_copy);
-    bool checkIfBuiltIn = isBuiltInCommand(cmd_split[0]);
-    try {
-        if (!checkIfBuiltIn && _isBackgroundComamnd(cmd_line.c_str())) {
-            handleBGCommand(cmd, cmd_line);
-            return;
-        }
-        if (!checkIfBuiltIn) {
-            handleExternalCommand(cmd, cmd_line);
-            return;
-        }
-        //handle built in command in the parent shell
-        cmd->execute();
-        //delete cmd;
-    }
-    catch(QuitException&) {
-        //delete cmd;
-        throw QuitException();
-    }
+    cmd->execute();
 }
 
 void SmallShell::handleIoCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO) {
@@ -503,7 +374,7 @@ JobsList &SmallShell::getJobsList() {
 
 /////////////////////////// GENERAL COMMANDS SECTION ///////////////////////////
 
-Command::Command(string cmd_line, pid_t pid) : cmd_line(cmd_line), pid(pid) {
+Command::Command(string cmd_line, std::vector<string> cmd_split, pid_t pid) : cmd_line(cmd_line), cmd_split(cmd_split), pid(pid) {
 
 }
 
@@ -519,59 +390,51 @@ pid_t Command::getPid() const {
     return pid;
 }
 
-BuiltInCommand::BuiltInCommand(string cmd_line, pid_t pid) : Command(cmd_line,pid) {
+BuiltInCommand::BuiltInCommand(string cmd_line,std::vector<string> cmd_split, pid_t pid) : Command(cmd_line,cmd_split,pid) {
 }
 
 Command::~Command()  {
 }
 
-//BuiltInCommand::~BuiltInCommand()  {
-//    //delete cmd_line;
-//}
-
-
 /////////////////////////// END OF GENERAL COMMANDS SECTION ///////////////////////////
 
 /////////////////////////// PWD COMMAND SECTION ///////////////////////////
 
-GetCurrDirCommand::GetCurrDirCommand(string cmd_line) : BuiltInCommand(cmd_line){}
+GetCurrDirCommand::GetCurrDirCommand(string cmd_line,std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){}
 
 void GetCurrDirCommand::execute() {
     char* path = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,path);
     std::cout << path << std::endl;
     free(path);
-    //printf("%s\n", getcwd(nullptr,0));
 }
 
 /////////////////////////// END OF PWD COMMAND SECTION ///////////////////////////
 
 /////////////////////////// SHOWPID COMMAND SECTION ///////////////////////////
 
-ShowPidCommand::ShowPidCommand(string cmd_line) : BuiltInCommand(cmd_line){}
+ShowPidCommand::ShowPidCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line,cmd_split){}
 
 void ShowPidCommand::execute() {
     pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(getpid(),getpid,pid);
-    std::cout << "smash pid is " << to_string(pid) << std::endl;
+    std::cout << "smash pid is " << std::to_string(pid) << std::endl;
 }
 
 /////////////////////////// END OF SHOWPID COMMAND SECTION ///////////////////////////
 
 /////////////////////////// CD COMMAND SECTION ///////////////////////////
 
-ChangeDirCommand::ChangeDirCommand(string cmd_line) : BuiltInCommand(cmd_line) {}
+ChangeDirCommand::ChangeDirCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split) {}
 
 void changeToPrevDirCaseMakaf () {
-    SmallShell& shell = SmallShell::getInstance();
-    string prevDir = shell.getPrevDir();
+    string prevDir = SmallShell::getInstance().getPrevDir();
     if (prevDir.empty()) {
-        //perror("smash error: cd: OLDPWD not set\n");
         std::cerr << "smash error: cd: OLDPWD not set" << std::endl;
         return;
     }
     char* currDir = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,currDir);
     string currDirStr(currDir);
     CHECK_SYSCALL(chdir(prevDir.c_str()),chdir);
-    shell.setPrevDir(currDirStr);
+    SmallShell::getInstance().setPrevDir(currDirStr);
     free(currDir);
 }
 
@@ -583,8 +446,7 @@ void changeToParentDirCaseDotDot () {
         free(currDir);
         return;
     }
-    SmallShell& shell = SmallShell::getInstance();
-    shell.setPrevDir(currDir);
+    SmallShell::getInstance().setPrevDir(currDir);
     free(currDir);
 }
 
@@ -597,32 +459,28 @@ void tryRelativeAddress(const string& secondArg) {
         free(currDir_char);
         return;
     }
-    //CHECK_SYSCALL(chdir(newDir.c_str()),chdir);
-    SmallShell& shell = SmallShell::getInstance();
-    shell.setPrevDir(currDir);
+    SmallShell::getInstance().setPrevDir(currDir);
     free(currDir_char);
 }
 
 
 void ChangeDirCommand::execute() {
-    std::vector<string> cmd_words = splitStringIntoWords(cmd_line);
-    if (cmd_words[1] == "-") {
+    if (cmd_split[1] == "-") {
         changeToPrevDirCaseMakaf();
         return;
     }
     char* currDir = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,currDir);
-    if (cmd_words[1] == "..") {
+    if (cmd_split[1] == "..") {
         changeToParentDirCaseDotDot();
         free(currDir);
         return;
     }
     //try absolute address
-    if (chdir(cmd_words[1].c_str()) != 0) {
-        tryRelativeAddress(cmd_words[1]);
+    if (chdir(cmd_split[1].c_str()) != 0) {
+        tryRelativeAddress(cmd_split[1]);
     }
     else {
-        SmallShell& shell = SmallShell::getInstance();
-        shell.setPrevDir(currDir);
+        SmallShell::getInstance().setPrevDir(currDir);
     }
     free(currDir);
 }
@@ -631,27 +489,25 @@ void ChangeDirCommand::execute() {
 
 /////////////////////////// FG COMMAND SECTION ///////////////////////////
 
-ForegroundCommand::ForegroundCommand(string cmd_line) : BuiltInCommand(cmd_line){}
+ForegroundCommand::ForegroundCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){}
 
 void ForegroundCommand::execute() {
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& job_list = shell.getJobsList();
-    job_list.removeFinishedJobs();
+    //JobsList& job_list = SmallShell::getInstance().getJobsList();
+    SmallShell::getInstance().getJobsList().removeFinishedJobs();
     shared_ptr<JobsList::JobEntry> jobToForeground;
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size() > 2 || (cmd_split.size() == 2 && !isNumber(cmd_split[1]))) {
         std::cerr << "smash error: fg: invalid arguments" << std::endl;
         return;
     }
-    if (job_list.isListEmpty()) {
+    if (SmallShell::getInstance().getJobsList().isListEmpty()) {
         std::cerr << "smash error: fg: jobs list is empty" << std::endl;
         return;
     }
     if (cmd_split.size() == 1) {
-        jobToForeground = job_list.getLastJob(nullptr);
+        jobToForeground = SmallShell::getInstance().getJobsList().getLastJob(nullptr);
     }
     else {
-        jobToForeground = job_list.getJobById(std::stoi(cmd_split[1]));
+        jobToForeground = SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1]));
     }
     if (!jobToForeground) {
         string errPrint = "smash error: fg: job-id " + cmd_split[1] + " does not exist" + '\n';
@@ -661,14 +517,14 @@ void ForegroundCommand::execute() {
     jobToForeground->printJobCmd();
 
     if (jobToForeground->getJobStatus() == STOPPED) {
-        shell.resumeJobInShell(jobToForeground);
+        SmallShell::getInstance().resumeJobInShell(jobToForeground);
     }
     int status;
-    shell.setCmdForeground(jobToForeground->getJobPid(),jobToForeground->getCmdLine());
+    SmallShell::getInstance().setCmdForeground(jobToForeground->getJobPid(),jobToForeground->getCmdLine());
     CHECK_SYSCALL(waitpid(jobToForeground->getJobPid(),&status,WUNTRACED),waitpid);
-    shell.setCmdForeground(0,"");
+    SmallShell::getInstance().setCmdForeground(0,"");
     if (!WIFSTOPPED(status)) {
-        job_list.removeJobById(jobToForeground->getJobId());
+        SmallShell::getInstance().getJobsList().removeJobById(jobToForeground->getJobId());
     }
 }
 
@@ -676,7 +532,7 @@ void ForegroundCommand::execute() {
 
 //////////////////////////////////// BG COMMAND SECTION ////////////////////////////////////
 
-BackgroundCommand::BackgroundCommand(string cmd_line) : BuiltInCommand(cmd_line){}
+BackgroundCommand::BackgroundCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){}
 
 bool isBgValidArguments(const string& cmd_word_2, unsigned long argumentCount) {
     if (argumentCount > 2 || (argumentCount > 1 && !isNumber(cmd_word_2))) {
@@ -686,16 +542,16 @@ bool isBgValidArguments(const string& cmd_word_2, unsigned long argumentCount) {
     return true;
 }
 
-shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argumentCount, const string& secondArg, JobsList& job_list) {
+shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argumentCount, const string& secondArg) {
     if (argumentCount > 1) {
-        shared_ptr<JobsList::JobEntry> job = job_list.getJobById(stoi(secondArg));
+        shared_ptr<JobsList::JobEntry> job = SmallShell::getInstance().getJobsList().getJobById(stoi(secondArg));
         if (!job) {
             std::cerr << "smash error: bg: job-id " << secondArg << " does not exist" << std::endl;
         }
         return job;
     }
     else {
-        shared_ptr<JobsList::JobEntry> job = job_list.getLastStoppedJob();
+        shared_ptr<JobsList::JobEntry> job = SmallShell::getInstance().getJobsList().getLastStoppedJob();
         if (!job) {
             std::cerr << "smash error: bg: there is no stopped jobs to resume" << std::endl;
         }
@@ -706,7 +562,7 @@ shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argument
 
 bool isJobStoppedAndPrintError (const shared_ptr<JobsList::JobEntry>& job) {
     if (job->getJobStatus() == RUNNING) {
-        std::cerr << "smash error: bg: job-id " << to_string(job->getJobId()) << " is already running in the background"
+        std::cerr << "smash error: bg: job-id " << std::to_string(job->getJobId()) << " is already running in the background"
                   << std::endl;
         return false;
     }
@@ -714,64 +570,54 @@ bool isJobStoppedAndPrintError (const shared_ptr<JobsList::JobEntry>& job) {
 }
 
 void BackgroundCommand::execute() {
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
+    SmallShell::getInstance().getJobsList().removeFinishedJobs();
     string secondArg = cmd_split.size() > 1 ? cmd_split[1] : "";
     if (!isBgValidArguments(secondArg, cmd_split.size())) {
         return;
     }
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& job_list = shell.getJobsList();
-    shared_ptr<JobsList::JobEntry> job = getJobForBgAndPrintErrors(cmd_split.size(),secondArg,job_list);
+    shared_ptr<JobsList::JobEntry> job = getJobForBgAndPrintErrors(cmd_split.size(),secondArg);
     if (!job) {
         return;
     }
     if (!isJobStoppedAndPrintError(job)) {
         return;
     }
-    time_t current_time = time(nullptr);
-    if (current_time == -1) {
-        return;
-    }
-    double job_run_time = difftime(current_time, job->getTimeCreated());
-    if (job_run_time == -1) {
-        return;
-    }
-    std::cout << job->getCmdLine() << " : " << std::setprecision(0) << job_run_time << std::endl;
-    job_list.resumeJob(job);
+//    string toPrint = job->getCmdLine();
+//    toPrint += " : " + std::to_string(job->getJobPid()) + '\n';
+//    std::cout << toPrint;
+    std::cout << job->getCmdLine() << " : " << job->getJobPid() << std::endl;
+    CHECK_SYSCALL(kill(job->getJobPid(),SIGCONT),kill);
+    job->setJobStatus(RUNNING);
+    //SmallShell::getInstance().getJobsList().resumeJob(job);
 }
 
 //////////////////////////////////// END OF BG COMMAND SECTION ////////////////////////////////////
 
 /////////////////////////// JOBS COMMAND SECTION ///////////////////////////
 
-JobsCommand::JobsCommand(string cmd_line) : BuiltInCommand(cmd_line){
+JobsCommand::JobsCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){
 }
 
 void JobsCommand::execute() {
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& job_list = shell.getJobsList();
-    job_list.removeFinishedJobs();
-    job_list.printJobsList();
+    SmallShell::getInstance().getJobsList().removeFinishedJobs();
+    SmallShell::getInstance().getJobsList().printJobsList();
 }
 
 /////////////////////////// END OF JOBS COMMAND SECTION ///////////////////////////
 
 /////////////////////////// QUIT COMMAND SECTION ///////////////////////////
 
-QuitCommand::QuitCommand(string cmd_line): BuiltInCommand(cmd_line){}
+QuitCommand::QuitCommand(string cmd_line, std::vector<string> cmd_split): BuiltInCommand(cmd_line, cmd_split){}
 
 void QuitCommand::execute() {
     if (cmd_line == "quit") {
         throw QuitException();
     }
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& jobs = shell.getJobsList();
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size() > 1 && cmd_split[1] == "kill"){
-        jobs.removeFinishedJobs();
-        std::cout << "smash: sending SIGKILL signal to " << to_string(jobs.get_Job_List().size()) << " jobs:" << std::endl;
-        jobs.print_jobs_for_quit_command();
-        jobs.killAllJobs();
+        SmallShell::getInstance().getJobsList().removeFinishedJobs();
+        std::cout << "smash: sending SIGKILL signal to " << std::to_string(SmallShell::getInstance().getJobsList().get_Job_List().size()) << " jobs:" << std::endl;
+        SmallShell::getInstance().getJobsList().print_jobs_for_quit_command();
+        SmallShell::getInstance().getJobsList().killAllJobs();
         throw QuitException();
     }
 }
@@ -780,7 +626,7 @@ void QuitCommand::execute() {
 
 /////////////////////////// KILL COMMAND SECTION ///////////////////////////
 
-KillCommand::KillCommand(string cmd_line): BuiltInCommand(cmd_line){}
+KillCommand::KillCommand(string cmd_line, std::vector<string> cmd_split): BuiltInCommand(cmd_line, cmd_split){}
 
 bool is_sigment(const string& s1){
     if (s1.length()>3){
@@ -795,19 +641,16 @@ bool is_sigment(const string& s1){
 }
 
 void KillCommand::execute() {
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& jobs = shell.getJobsList();
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     bool second_word_ok,third_word_ok;
     second_word_ok = cmd_split.size() > 1 && is_sigment(cmd_split[1]);
     third_word_ok = cmd_split.size() > 2 && isNumber(cmd_split[2]);
-    jobs.removeFinishedJobs();
+    SmallShell::getInstance().getJobsList().removeFinishedJobs();
     if (cmd_split.size() != 3 || !second_word_ok || !third_word_ok ) {
         std::cerr << "smash error: kill: invalid arguments" << std::endl;
         return;
     }
-    shared_ptr<JobsList::JobEntry> job_to_kill = jobs.getJobById(stoi(cmd_split[2]));
-    if(jobs.get_Job_List().empty() || !job_to_kill)
+    shared_ptr<JobsList::JobEntry> job_to_kill = SmallShell::getInstance().getJobsList().getJobById(stoi(cmd_split[2]));
+    if(SmallShell::getInstance().getJobsList().get_Job_List().empty() || !job_to_kill)
     {
         string printErr = "smash error: kill: job-id " + cmd_split[2] + " does not exist" + '\n';
         std::cerr << printErr;
@@ -816,12 +659,12 @@ void KillCommand::execute() {
     int signal_int=stoi(cmd_split[1].substr(1,cmd_split[1].length()-1));
     CHECK_SYSCALL(kill(job_to_kill->getJobPid(),signal_int),kill);
     if (signal_int == SIGSTOP) {
-        shell.stopJobInShell(job_to_kill);
+        SmallShell::getInstance().stopJobInShell(job_to_kill);
     }
     if (signal_int == SIGCONT) {
-        shell.resumeJobInShell(job_to_kill,false);
+        SmallShell::getInstance().resumeJobInShell(job_to_kill,false);
     }
-    std::cout << "signal number " + to_string(signal_int) + " was sent to pid " + to_string(job_to_kill->getJobPid()) << std::endl;
+    std::cout << "signal number " + std::to_string(signal_int) + " was sent to pid " + std::to_string(job_to_kill->getJobPid()) << std::endl;
 }
 
 
@@ -829,11 +672,10 @@ void KillCommand::execute() {
 
 /////////////////////////// SETCORE COMMAND SECTION ///////////////////////////
 
-SetcoreCommand::SetcoreCommand(string cmd_line) : BuiltInCommand(cmd_line){}
+SetcoreCommand::SetcoreCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){}
 
 
 void SetcoreCommand::execute() {
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size()!=3 || !isNumber(cmd_split[1]) || !isNumber(cmd_split[2])) {
         std::cerr << "smash error: setcore: invalid arguments" << std::endl;
         return;
@@ -844,15 +686,14 @@ void SetcoreCommand::execute() {
         std::cerr << "smash error: setcore: invalid core number" << std::endl;
         return;
     }
-    SmallShell& shell = SmallShell::getInstance();
-    JobsList& jobs = shell.getJobsList();
-    if (!jobs.getJobById(std::stoi(cmd_split[1])))
+    //JobsList& jobs = SmallShell::getInstance().getJobsList();
+    if (!SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1])))
     {
         string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist" + '\n';
         std::cerr << printErr;
         return;
     }
-    pid_t jobPid= jobs.getJobById(std::stoi(cmd_split[1]))->getJobPid();
+    pid_t jobPid= SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1]))->getJobPid();
     cpu_set_t mask;
     CPU_ZERO(&mask);
     CPU_SET(std::stoi(cmd_split[2]), &mask);
@@ -864,7 +705,7 @@ void SetcoreCommand::execute() {
 
 /////////////////////////// GETFILETYPE COMMAND SECTION ///////////////////////////
 
-GetFileTypeCommand::GetFileTypeCommand(string cmd_line)  : BuiltInCommand(cmd_line){}
+GetFileTypeCommand::GetFileTypeCommand(string cmd_line, std::vector<string> cmd_split)  : BuiltInCommand(cmd_line, cmd_split){}
 
 const char* get_file_type(const char *path) {
     struct stat st;
@@ -891,7 +732,6 @@ long get_file_size(const char *path) {
 }
 
 void GetFileTypeCommand::execute() {
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size() != 2) {
         std::cerr << "smash error: gettype: invalid arguments" <<std::endl;
         return;
@@ -911,7 +751,7 @@ void GetFileTypeCommand::execute() {
         if (num_of_bytes == -1) {
             return;
         }
-        std::cout << cmd_split[1] + "'s type is " + theType+ " and takes up " + to_string(num_of_bytes) + " bytes" << std::endl;
+        std::cout << cmd_split[1] + "'s type is " + theType+ " and takes up " + std::to_string(num_of_bytes) + " bytes" << std::endl;
         return;
     }
 }
@@ -921,7 +761,7 @@ void GetFileTypeCommand::execute() {
 
 /////////////////////////// CHMOD COMMAND SECTION ///////////////////////////
 
-ChmodCommand::ChmodCommand(string cmd_line): BuiltInCommand(cmd_line){}
+ChmodCommand::ChmodCommand(string cmd_line, std::vector<string> cmd_split): BuiltInCommand(cmd_line, cmd_split){}
 
 int validation_ch(int mode) {
     if ((mode >= 0) && (mode <= 0777)) {
@@ -932,7 +772,6 @@ int validation_ch(int mode) {
 }
 
 void ChmodCommand::execute() {
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     int mode= cmd_split.size() > 1 ? validation_ch(std::stoi(cmd_split[1],0,8)) : -1;
     if ( cmd_split.size() != 3 || ! isNumber(cmd_split[1]) || mode==-1) {
         std::cerr << "smash error: chmod: invalid arguments" << std::endl;
@@ -946,7 +785,7 @@ void ChmodCommand::execute() {
 
 /////////////////////////// EXTERNAL COMMAND SECTION ///////////////////////////
 
-ExternalCommand::ExternalCommand(string cmd_line) : Command(cmd_line){}
+ExternalCommand::ExternalCommand(string cmd_line, std::vector<string> cmd_split) : Command(cmd_line, cmd_split){}
 
 bool isComplexExternalCommand (string cmd_line) {
     for (unsigned int i = 0; i < cmd_line.length(); i++) {
@@ -957,16 +796,26 @@ bool isComplexExternalCommand (string cmd_line) {
     return false;
 }
 
-void runExternalCommand(bool isComplex, char * const * args_for_complex, char * const * args_for_simple) {
-    if (isComplex) {
-        CHECK_SYSCALL(execvp("/bin/bash", args_for_complex),execvp);
+void runExternalCommand(const char* prog, char * const * args, string& cmd_line) {
+    bool isBGCommand = _isBackgroundComamnd(cmd_line.c_str());
+    pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(), fork, pid);
+    if (pid > 0) {
+        if (isBGCommand) {
+            SmallShell::getInstance().addJobToShell(pid,cmd_line);
+        }
+        else {
+            SmallShell::getInstance().setCmdForeground(pid,cmd_line);
+            CHECK_SYSCALL(waitpid(pid, nullptr, WUNTRACED),waitpid);
+            SmallShell::getInstance().setCmdForeground(0,"");
+        }
     }
     else {
-        CHECK_SYSCALL(execvp(args_for_simple[0], args_for_simple),execvp);
+        CHECK_SYSCALL(setpgrp(), setpgrp);
+        CHECK_SYSCALL(execvp(prog,args),execvp);
+        delete[] args;
+        throw QuitException();
     }
 }
-
-
 
 void copyWordsIntoArgs(const std::vector<string>& words, char** args_for_simple) {
     for (unsigned int i = 0; i < words.size(); i++) {
@@ -975,46 +824,30 @@ void copyWordsIntoArgs(const std::vector<string>& words, char** args_for_simple)
     }
 }
 
+void deleteWordsArgs(char** args_for_simple, unsigned int size) {
+    for (unsigned int i = 0; i < size; i++) {
+        delete[] args_for_simple[i];
+    }
+    delete[] args_for_simple;
+}
+
 void ExternalCommand::execute() {
     bool isComplex = isComplexExternalCommand(cmd_line);
     string cmd_line_cpy_str(cmd_line);
     _removeBackgroundSign(cmd_line_cpy_str);
-    std::vector<string> cmd_split = splitStringIntoWords(cmd_line_cpy_str);
-    char bashStr[] = "bash";
-    char minusCStr[] = "-c";
-    char* args_for_complex[4] = {bashStr, minusCStr, const_cast<char*>(cmd_line_cpy_str.c_str()), nullptr};
-    char** args_for_simple= new char*[cmd_split.size()+1];
-    args_for_simple[cmd_split.size()] = nullptr;
-    copyWordsIntoArgs(cmd_split,args_for_simple);
-    runExternalCommand(isComplex,args_for_complex,args_for_simple);
-    for (unsigned int i = 0; i < cmd_split.size(); i++) {
-        delete[] args_for_simple[i];
+    if (isComplex) {
+        char bashStr[] = "bash";
+        char minusCStr[] = "-c";
+        char* args_for_complex[4] = {bashStr, minusCStr, const_cast<char*>(cmd_line_cpy_str.c_str()), nullptr};
+        runExternalCommand("/bin/bash",args_for_complex,cmd_line);
     }
-    delete[] args_for_simple;
-    throw QuitException();
-//    if (_isBackgroundComamnd(cmd_line.c_str())) {
-//        runExternalCommand(isComplex,args_for_complex,args_for_simple);
-//    }
-//    else {
-//        pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(),fork,pid);
-//        bool isParent = (pid > 0);
-//        if (isParent) {
-//            CHECK_SYSCALL(waitpid(pid, nullptr, WUNTRACED),waitpid);
-//        }
-//        else {
-//            CHECK_SYSCALL(setpgrp(),setpgrp);
-//            runExternalCommand(isComplex,args_for_complex,args_for_simple);
-//            for (unsigned int i = 0; i < cmd_split.size(); i++) {
-//                delete[] args_for_simple[i];
-//            }
-//            delete[] args_for_simple;
-//            throw QuitException();
-//        }
-//    }
-//    for (unsigned int i = 0; i < cmd_split.size(); i++) {
-//        delete[] args_for_simple[i];
-//    }
-//    delete[] args_for_simple;
+    else {
+        char** args_for_simple= new char*[cmd_split.size()+1];
+        args_for_simple[cmd_split.size()] = nullptr;
+        copyWordsIntoArgs(cmd_split,args_for_simple);
+        runExternalCommand(args_for_simple[0],args_for_simple,cmd_line);
+        deleteWordsArgs(args_for_simple,cmd_split.size());
+    }
 }
 
 
@@ -1022,7 +855,7 @@ void ExternalCommand::execute() {
 
 /////////////////////////// JOBS CLASSES SECTION ///////////////////////////
 
-JobsList::JobsList() : job_list(), maximalJobId(0), stoppedJobs() {}
+JobsList::JobsList() : job_list(), maximalJobId(0) {}
 
 bool JobsList::isCmdInList(shared_ptr<Command> cmd) const {
     if (!cmd) {
@@ -1062,7 +895,8 @@ void JobsList::addJob(pid_t pid, string cmd_line, bool isStopped) {
     }
     shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, pid, cmd_line);
     if (isStopped) {
-        stopJob(newJob);
+        newJob->setJobStatus(STOPPED);
+        //stopJob(newJob);
     }
     maximalJobId++;
     job_list.push_back(newJob);
@@ -1073,12 +907,6 @@ void JobsList::resumeJob(shared_ptr<JobsList::JobEntry> job, bool toCont) {
         CHECK_SYSCALL(kill(job->getJobPid(),SIGCONT),kill);
     }
     job->setJobStatus(RUNNING);
-    for (auto it = stoppedJobs.begin(); it != stoppedJobs.end(); ++it) {
-        if ((*it)->getJobPid() == job->getJobPid()) {
-            stoppedJobs.erase(it);
-            break;
-        }
-    }
 }
 
 void JobsList::printJobsList() {
@@ -1087,12 +915,12 @@ void JobsList::printJobsList() {
         time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,current_time);
         double job_run_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(difftime(current_time,it->getTimeCreated()),difftime,job_run_time);
 
-        std::cout << "[" << to_string(it->getJobId()) << "] " + str_cmd_line + " : " + to_string(it->getJobPid()) + " "  <<
+        std::cout << "[" << std::to_string(it->getJobId()) << "] " + str_cmd_line + " : " + std::to_string(it->getJobPid()) + " "  <<
                                                          job_run_time << " secs";
         if (it->getJobStatus() == STOPPED) {
             std::cout << " (stopped)";
         }
-        std::cout << endl;
+        std::cout << std::endl;
     }
 }
 
@@ -1101,7 +929,6 @@ void JobsList::killAllJobs(){
     for (auto & it : job_list)
     {
         CHECK_SYSCALL(kill(it->getJobPid(),15),kill);
-        //CHECK_SYSCALL(waitpid(it->getJobPid(), nullptr,WUNTRACED),waitpid);
     }
     job_list.clear();
 }
@@ -1115,20 +942,6 @@ void JobsList::initializeMaximalJobId() {
         }
     }
     maximalJobId = maxJobId;
-}
-
-void JobsList::removeFinishedStoppedJobs() {
-    for (auto it = stoppedJobs.begin(); it != stoppedJobs.end();) {
-        pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid((*it)->getJobPid(), nullptr,WNOHANG),waitpid,waitReturnValue);
-        if(waitReturnValue > 0)
-        {
-            it = stoppedJobs.erase(it);
-        }
-        else
-        {
-            ++it;
-        }
-    }
 }
 
 void JobsList::removeFinishedJobs(){
@@ -1145,7 +958,6 @@ void JobsList::removeFinishedJobs(){
         }
     }
     initializeMaximalJobId();
-    removeFinishedStoppedJobs();
 }
 
 
@@ -1177,7 +989,15 @@ shared_ptr<JobsList::JobEntry> JobsList::getLastJob(int *lastJobId) {
 }
 
 shared_ptr<JobsList::JobEntry> JobsList::getLastStoppedJob() {
-    return stoppedJobs.empty() ? nullptr : stoppedJobs.back();
+    int maxId = 0;
+    shared_ptr<JobsList::JobEntry> lastStopped = nullptr;
+    for (auto & job : job_list) {
+        if (job->getJobStatus() == STOPPED && (!lastStopped || job->getJobId() > maxId)) {
+            maxId = job->getJobId();
+            lastStopped = job;
+        }
+    }
+    return lastStopped;
 }
 
 bool JobsList::isListEmpty() const {
@@ -1202,13 +1022,12 @@ std::vector<shared_ptr<JobsList::JobEntry>>& JobsList::get_Job_List() {
 
 void JobsList::print_jobs_for_quit_command() {
     for (auto & it : job_list) {
-        std::cout << to_string(it->getJobPid()) << ": " << it->getCmdLine() << std::endl;
+        std::cout << std::to_string(it->getJobPid()) << ": " << it->getCmdLine() << std::endl;
     }
 }
 
 void JobsList::stopJob(shared_ptr<JobEntry> jobToStop) {
     jobToStop->setJobStatus(STOPPED);
-    stoppedJobs.push_back(jobToStop);
 }
 
 shared_ptr<JobsList::JobEntry> JobsList::getJobByPid(pid_t pid) {
@@ -1234,7 +1053,7 @@ int JobsList::JobEntry::getJobId() const {
 }
 
 void JobsList::JobEntry::printJobCmd() const {
-    std::cout << cmd_line << " : " << to_string(jobPid) << std::endl;
+    std::cout << cmd_line << " : " << std::to_string(jobPid) << std::endl;
 }
 
 string JobsList::JobEntry::getCmdLine() const {

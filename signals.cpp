@@ -25,32 +25,30 @@ using namespace std;
 
 void ctrlZHandler(int sig_num) {
 	// TODO: Add your implementation
-    SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-Z" << std::endl;
-    pid_t cmdPid = shell.getForegroundProcessPid();
+    pid_t cmdPid = SmallShell::getInstance().getForegroundProcessPid();
     if (cmdPid != 0) {
         pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
             CHECK_SYSCALL(kill(cmdPid,SIGSTOP),kill);
-            std::cout << "smash: process "+ to_string(cmdPid) + " was stopped" << std::endl;
-            shell.addJobToShell(cmdPid,shell.getForegroundProcessCmdLine(),true);
-            shell.setCmdForeground(0,"");
+            SmallShell::getInstance().addJobToShell(cmdPid,SmallShell::getInstance().getForegroundProcessCmdLine(),true);
+            SmallShell::getInstance().setCmdForeground(0,"");
+            std::cout << "smash: process " << cmdPid << " was stopped" << std::endl;
         }
     }
 }
 
 void ctrlCHandler(int sig_num) {
   // TODO: Add your implementation
-    SmallShell& shell = SmallShell::getInstance();
     std::cout << "smash: got ctrl-C" << std::endl;
-    pid_t cmdPid = shell.getForegroundProcessPid();
+    pid_t cmdPid = SmallShell::getInstance().getForegroundProcessPid();
     if (cmdPid != 0) {
         pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(cmdPid,nullptr,WNOHANG),waitpid,waitReturnValue);
         if (waitReturnValue == 0) {
             CHECK_SYSCALL(kill(cmdPid,SIGKILL),kill);
             std::cout << "smash: process "+ to_string(cmdPid) + " was killed" << std::endl;
             //delete cmd;
-            shell.setCmdForeground(0,"");
+            SmallShell::getInstance().setCmdForeground(0,"");
         }
     }
 }

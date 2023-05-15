@@ -20,9 +20,10 @@ class Command {
 // TODO: Add your data members
 protected:
     string cmd_line;
+    std::vector<string> cmd_split;
     pid_t pid;
  public:
-  Command(string cmd_line, pid_t pid = 0);
+  Command(string cmd_line, std::vector<string> cmd_split, pid_t pid = 0);
   virtual ~Command();
   virtual void execute() = 0;
   string getCmdLine() const;
@@ -35,13 +36,13 @@ protected:
 
 class BuiltInCommand : public Command {
  public:
-  BuiltInCommand(string cmd_line, pid_t pid = 0);
+  BuiltInCommand(string cmd_line, std::vector<string> cmd_split, pid_t pid = 0);
   virtual ~BuiltInCommand()=default;
 };
 
 class ExternalCommand : public Command {
  public:
-  ExternalCommand(string cmd_line);
+  ExternalCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ExternalCommand() =default;
   void execute() override;
   //to delete!!!
@@ -70,21 +71,21 @@ class RedirectionCommand : public Command {
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members public:
 public:
-  ChangeDirCommand(string cmd_line);
+  ChangeDirCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ChangeDirCommand() {}
   void execute() override;
 };
 
 class GetCurrDirCommand : public BuiltInCommand {
  public:
-  GetCurrDirCommand(string cmd_line);
+  GetCurrDirCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~GetCurrDirCommand() {}
   void execute() override;
 };
 
 class ShowPidCommand : public BuiltInCommand {
  public:
-  ShowPidCommand(string cmd_line);
+  ShowPidCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ShowPidCommand() {}
   void execute() override;
 };
@@ -94,7 +95,7 @@ class QuitCommand : public BuiltInCommand {
 // TODO: Add your data members
 private:
 public:
-  QuitCommand(string cmd_line);
+  QuitCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~QuitCommand() {}
   void execute() override;
 };
@@ -131,7 +132,6 @@ private:
 private:
     std::vector<shared_ptr<JobEntry>> job_list;
     int maximalJobId;
-    std::vector<shared_ptr<JobEntry>> stoppedJobs;
 public:
 
   JobsList();
@@ -153,7 +153,6 @@ public:
   bool isCmdInList(shared_ptr<Command> cmd) const;
   shared_ptr<JobEntry> getJobByCmd(shared_ptr<Command> cmd);
   void stopJob(shared_ptr<JobEntry> jobToStop);
-  void removeFinishedStoppedJobs();
   // TODO: Add extra methods or modify exisitng ones as needed
     shared_ptr<JobsList::JobEntry> getJobByPid(pid_t pid);
 };
@@ -162,7 +161,7 @@ class JobsCommand : public BuiltInCommand {
  // TODO: Add your data members
  string cmd_line;
  public:
-  JobsCommand(string cmd_line);
+  JobsCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~JobsCommand() {}
   void execute() override;
 };
@@ -170,7 +169,7 @@ class JobsCommand : public BuiltInCommand {
 class ForegroundCommand : public BuiltInCommand {
  // TODO: Add your data members
  public:
-  ForegroundCommand(string cmd_line);
+  ForegroundCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
@@ -178,7 +177,7 @@ class ForegroundCommand : public BuiltInCommand {
 class BackgroundCommand : public BuiltInCommand {
  // TODO: Add your data members
  public:
-  BackgroundCommand(string cmd_line);
+  BackgroundCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~BackgroundCommand() {}
   void execute() override;
 };
@@ -195,7 +194,7 @@ class TimeoutCommand : public BuiltInCommand {
 class ChmodCommand : public BuiltInCommand {
   // TODO: Add your data members
  public:
-  ChmodCommand(string cmd_line);
+  ChmodCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ChmodCommand() {}
   void execute() override;
 };
@@ -203,7 +202,7 @@ class ChmodCommand : public BuiltInCommand {
 class GetFileTypeCommand : public BuiltInCommand {
   // TODO: Add your data members
  public:
-  GetFileTypeCommand(string cmd_line);
+  GetFileTypeCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~GetFileTypeCommand() {}
   void execute() override;
 };
@@ -211,7 +210,7 @@ class GetFileTypeCommand : public BuiltInCommand {
 class SetcoreCommand : public BuiltInCommand {
 // TODO: Add your data members
 public:
-    SetcoreCommand(string cmd_line);
+    SetcoreCommand(string cmd_line, std::vector<string> cmd_split);
     virtual ~SetcoreCommand() {}
     void execute() override;
 };
@@ -219,7 +218,7 @@ public:
 class KillCommand : public BuiltInCommand {
  // TODO: Add your data members
  public:
-  KillCommand(string cmd_line);
+  KillCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~KillCommand() {}
   void execute() override;
 };
@@ -246,14 +245,12 @@ class SmallShell {
   ~SmallShell()=default;
   void executeCommand(string cmd_line);
   // TODO: add extra methods as needed
-  void setShellName(string newName);
+  void setShellName(const string& newName);
   string getShellName();
   pid_t getForegroundProcessPid() const;
   void addJobToShell(pid_t pid, string cmd_line, bool isStopped=false);
-  void setCmdForeground(pid_t pid, string cmd_line);
+  void setCmdForeground(pid_t pid, const string& cmd_line);
   void handleOneCommand(shared_ptr<Command> cmd, string cmd_line);
-  void handleBGCommand(shared_ptr<Command> cmd, string cmd_line);
-  void handleExternalCommand(shared_ptr<Command> cmd, string cmd_line);
   void handlePipeIoCommand(string cmd_line, int pipeIOIndex, string pipeIOString, bool isTwoCharsPipeIO);
   void handleIoCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO);
   void handlePipeCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO);

@@ -1,20 +1,20 @@
-==30302== Memcheck, a memory error detector
-==30302== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==30302== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==30302== Command: /mnt/c/Users/illus/os/hw/1/smash
-==30302== Parent PID: 30296
-==30302== 
-==30302== 
-==30302== FILE DESCRIPTORS: 4 open (3 std) at exit.
-==30302== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_touch_invalid_args_amount.valgrind
-==30302==    <inherited from parent>
-==30302== 
-==30302== 
-==30302== HEAP SUMMARY:
-==30302==     in use at exit: 0 bytes in 0 blocks
-==30302==   total heap usage: 33 allocs, 33 frees, 79,437 bytes allocated
-==30302== 
-==30302== All heap blocks were freed -- no leaks are possible
-==30302== 
-==30302== For lists of detected and suppressed errors, rerun with: -s
-==30302== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==23534== Memcheck, a memory error detector
+==23534== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==23534== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==23534== Command: /mnt/c/Users/illus/os/hw/1/smash
+==23534== Parent PID: 23529
+==23534== 
+==23534== 
+==23534== FILE DESCRIPTORS: 4 open (3 std) at exit.
+==23534== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_touch_invalid_args_amount.valgrind
+==23534==    <inherited from parent>
+==23534== 
+==23534== 
+==23534== HEAP SUMMARY:
+==23534==     in use at exit: 0 bytes in 0 blocks
+==23534==   total heap usage: 41 allocs, 41 frees, 79,658 bytes allocated
+==23534== 
+==23534== All heap blocks were freed -- no leaks are possible
+==23534== 
+==23534== For lists of detected and suppressed errors, rerun with: -s
+==23534== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

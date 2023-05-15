@@ -16,16 +16,16 @@ int main(int argc, char* argv[]) {
     //TODO: setup sig alarm handler
 
     SmallShell& smash = SmallShell::getInstance();
-    try {
-        while(true) {
-           std::cout << smash.getShellName() + "> ";
-            std::string cmd_line;
-            std::getline(std::cin, cmd_line);
+    while(true) {
+        std::cout << smash.getShellName() + "> ";
+        std::string cmd_line;
+        std::getline(std::cin, cmd_line);
+        try {
             smash.executeCommand(cmd_line);
         }
-    }
-    catch (QuitException&) {
-        return 0;
+        catch (QuitException&) {
+            return 0;
+        }
     }
     return 0;
 }
