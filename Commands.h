@@ -93,9 +93,8 @@ class JobsList;
 class QuitCommand : public BuiltInCommand {
 // TODO: Add your data members
 private:
-    JobsList* jobs;
 public:
-  QuitCommand(string cmd_line, JobsList* jobs);
+  QuitCommand(string cmd_line);
   virtual ~QuitCommand() {}
   void execute() override;
 };
@@ -114,7 +113,7 @@ private:
    string cmd_line;
    //shared_ptr<Command> cmd;
   public:
-     JobEntry(int jobId, pid_t jobPid, time_t timeCreated, string cmd_line);
+     JobEntry(int jobId, pid_t jobPid, string cmd_line);
      ~JobEntry();
      int getJobId() const;
      string getCmdLine() const;
@@ -162,27 +161,24 @@ public:
 class JobsCommand : public BuiltInCommand {
  // TODO: Add your data members
  string cmd_line;
- JobsList* job_list;
  public:
-  JobsCommand(string cmd_line, JobsList* jobs);
+  JobsCommand(string cmd_line);
   virtual ~JobsCommand() {}
   void execute() override;
 };
 
 class ForegroundCommand : public BuiltInCommand {
  // TODO: Add your data members
- JobsList* job_list;
  public:
-  ForegroundCommand(string cmd_line, JobsList* jobs);
+  ForegroundCommand(string cmd_line);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
 
 class BackgroundCommand : public BuiltInCommand {
  // TODO: Add your data members
- JobsList* job_list;
  public:
-  BackgroundCommand(string cmd_line, JobsList* jobs);
+  BackgroundCommand(string cmd_line);
   virtual ~BackgroundCommand() {}
   void execute() override;
 };
@@ -214,18 +210,16 @@ class GetFileTypeCommand : public BuiltInCommand {
 
 class SetcoreCommand : public BuiltInCommand {
 // TODO: Add your data members
-    JobsList* jobs;
 public:
-    SetcoreCommand(string cmd_line,JobsList* jobs );
+    SetcoreCommand(string cmd_line);
     virtual ~SetcoreCommand() {}
     void execute() override;
 };
 
 class KillCommand : public BuiltInCommand {
  // TODO: Add your data members
- JobsList* jobs;
  public:
-  KillCommand(string cmd_line, JobsList* jobs);
+  KillCommand(string cmd_line);
   virtual ~KillCommand() {}
   void execute() override;
 };
@@ -268,6 +262,7 @@ class SmallShell {
   const string& getPrevDir() const;
   void setPrevDir(string newDir);
   string getForegroundProcessCmdLine() const;
+  JobsList& getJobsList();
 };
 
 class QuitException : public std::exception {};

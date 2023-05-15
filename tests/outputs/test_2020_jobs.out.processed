@@ -132,7 +132,7 @@ smash> [1] sleep 11414& : 2 X secs
 [114] sleep 114141& : 12 X secs (stopped)
 [11] sleep 114142 : 119 X secs
 smash> smash: got ctrl-C
-smash: process 15 was killed
+smash: process 58514 was killed
 smash> smash> smash: got ctrl-C
 smash: got ctrl-C
 smash: got ctrl-Z
@@ -250,7 +250,7 @@ smash> smash> [5] sleep 51414& : 6 2e+141 secs
 [12] sleep 111414 : 16 X secs
 [119] sleep 121414 : 17 X secs (stopped)
 [14] sleep 121414 : 18 X secs (stopped)
-[15] sleep 19& : 71955 X secs
+[15] sleep 19& : 20 X secs
 smash> [5] sleep 51414& : 6 19e+141 secs
 [6] sleep 61414& : 7 19e+141 secs
 [7] sleep 71414& : 8 19e+141 secs
@@ -332,11 +332,11 @@ smash> smash> [5] sleep 51414& : 6 19e+141 secs
 [12] sleep 111414 : 16 2e+141 secs
 [119] sleep 121414 : 17 2e+141 secs (stopped)
 [14] sleep 121414 : 18 2e+141 secs (stopped)
-[15] sleep 777& : 21 X secs
+[15] sleep 777& : 714191 X secs
 smash> smash: got ctrl-C
-smash: process 22 was killed
+smash: process 714195 was killed
 smash> smash: got ctrl-Z
-smash: process 23 was stopped
+smash: process 71449 was stopped
 smash> sleep 888 : 14
 smash> [5] sleep 51414& : 6 19e+141 secs
 [6] sleep 61414& : 7 19e+141 secs
@@ -347,8 +347,8 @@ smash> [5] sleep 51414& : 6 19e+141 secs
 [12] sleep 111414 : 16 2e+141 secs
 [119] sleep 121414 : 17 2e+141 secs (stopped)
 [14] sleep 121414 : 18 2e+141 secs (stopped)
-[15] sleep 777& : 21 X secs
-[16] sleep 888 : 23 X secs
+[15] sleep 777& : 714191 X secs
+[16] sleep 888 : 71449 X secs
 smash> smash> [5] sleep 51414& : 6 19e+141 secs
 [6] sleep 61414& : 7 19e+141 secs
 [7] sleep 71414& : 8 19e+141 secs
@@ -358,12 +358,12 @@ smash> smash> [5] sleep 51414& : 6 19e+141 secs
 [12] sleep 111414 : 16 2e+141 secs
 [119] sleep 121414 : 17 2e+141 secs (stopped)
 [14] sleep 121414 : 18 2e+141 secs (stopped)
-[15] sleep 777& : 21 X secs
-[16] sleep 888 : 23 X secs
-[17] sleep 11414& : 24 X secs
-smash> sleep 11414& : 24
+[15] sleep 777& : 714191 X secs
+[16] sleep 888 : 71449 X secs
+[17] sleep 11414& : 71466 X secs
+smash> sleep 11414& : 71466
 smash: got ctrl-Z
-smash: process 24 was stopped
+smash: process 71466 was stopped
 smash> smash: sending SIGKILL signal to 12 jobs:
 6: sleep 51414&
 7: sleep 61414&
@@ -374,6 +374,6 @@ smash> smash: sending SIGKILL signal to 12 jobs:
 16: sleep 111414
 17: sleep 121414
 18: sleep 121414
-21: sleep 777&
-23: sleep 888
-24: sleep 11414&
+714191: sleep 777&
+71449: sleep 888
+71466: sleep 11414&

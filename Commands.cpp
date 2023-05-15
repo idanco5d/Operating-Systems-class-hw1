@@ -280,22 +280,22 @@ shared_ptr<Command> SmallShell::CreateCommand(const string& cmd_line) {
       return std::make_shared<ChangeDirCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "jobs") {
-      return std::make_shared<JobsCommand>(cmd_line_for_builtin,&jobs_list);
+      return std::make_shared<JobsCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "fg") {
-      return std::make_shared<ForegroundCommand>(cmd_line_for_builtin, &jobs_list);
+      return std::make_shared<ForegroundCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "bg") {
-      return std::make_shared<BackgroundCommand>(cmd_line_for_builtin,&jobs_list);
+      return std::make_shared<BackgroundCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "quit") {
-      return std::make_shared<QuitCommand>(cmd_line_for_builtin, &jobs_list);
+      return std::make_shared<QuitCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "kill") {
-      return std::make_shared<KillCommand>(cmd_line_for_builtin, &jobs_list);
+      return std::make_shared<KillCommand>(cmd_line_for_builtin);
   }
   else if (cmd_words[0] == "setcore") {
-      return std::make_shared<SetcoreCommand>(cmd_line, &jobs_list);
+      return std::make_shared<SetcoreCommand>(cmd_line);
   }
   else if (cmd_words[0] == "getfileinfo") {
       return std::make_shared<GetFileTypeCommand>(cmd_line);
@@ -406,6 +406,7 @@ void SmallShell::handleIoCommand(string first_cmd, string second_cmd, bool isTwo
     if (fd == -1) {
         perror("smash error: open failed");
         CHECK_SYSCALL(dup2(stdout_dup,STDOUT_FILENO),dup2);
+        CHECK_SYSCALL(close(stdout_dup),close);
         return;
     }
     //handle the command and re-open stdout
@@ -413,6 +414,7 @@ void SmallShell::handleIoCommand(string first_cmd, string second_cmd, bool isTwo
     handleOneCommand(cmd,first_cmd.c_str());
     CHECK_SYSCALL(close(fd),close);
     CHECK_SYSCALL(dup2(stdout_dup,STDOUT_FILENO),dup2);
+    CHECK_SYSCALL(close(stdout_dup),close);
 }
 
 void SmallShell::handlePipeCommand(string first_cmd, string second_cmd, bool isTwoCharsPipeIO) {
@@ -450,12 +452,6 @@ void SmallShell::handlePipeIoCommand(string cmd_line, int pipeIOIndex, string pi
 }
 
 void SmallShell::executeCommand(string cmd_line) {
-    //to delete!!!!
-//    shared_ptr<JobsList::JobEntry> job = jobs_list.getLastStoppedJob(nullptr);
-//    if (job) {
-//        std::cout << "The pid from last stopped job is " << job->getJobPid() << std::endl;
-//    }
-    //not to delete
     if (_trim(cmd_line).empty()) {
         return;
     }
@@ -497,6 +493,10 @@ void SmallShell::setPrevDir(string newDir) {
 
 string SmallShell::getForegroundProcessCmdLine() const {
     return cmdForegroundCmdLine;
+}
+
+JobsList &SmallShell::getJobsList() {
+    return jobs_list;
 }
 
 /////////////////////////// END OF SMALLSHELL CLASS SECTION ///////////////////////////
@@ -592,7 +592,12 @@ void tryRelativeAddress(const string& secondArg) {
     char* currDir_char = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,currDir_char);
     string currDir(currDir_char);
     string newDir = currDir + "/" + secondArg;
-    CHECK_SYSCALL(chdir(newDir.c_str()),chdir);
+    if (chdir(newDir.c_str()) == -1) {
+        perror( "smash error: chdir failed" );
+        free(currDir_char);
+        return;
+    }
+    //CHECK_SYSCALL(chdir(newDir.c_str()),chdir);
     SmallShell& shell = SmallShell::getInstance();
     shell.setPrevDir(currDir);
     free(currDir_char);
@@ -608,6 +613,7 @@ void ChangeDirCommand::execute() {
     char* currDir = CHECK_SYSCALL_AND_GET_VALUE_RVOID_PTRS(getcwd(nullptr,0),getcwd,currDir);
     if (cmd_words[1] == "..") {
         changeToParentDirCaseDotDot();
+        free(currDir);
         return;
     }
     //try absolute address
@@ -625,25 +631,27 @@ void ChangeDirCommand::execute() {
 
 /////////////////////////// FG COMMAND SECTION ///////////////////////////
 
-ForegroundCommand::ForegroundCommand(string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), job_list(jobs){}
+ForegroundCommand::ForegroundCommand(string cmd_line) : BuiltInCommand(cmd_line){}
 
 void ForegroundCommand::execute() {
-    job_list->removeFinishedJobs();
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& job_list = shell.getJobsList();
+    job_list.removeFinishedJobs();
     shared_ptr<JobsList::JobEntry> jobToForeground;
     std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size() > 2 || (cmd_split.size() == 2 && !isNumber(cmd_split[1]))) {
         std::cerr << "smash error: fg: invalid arguments" << std::endl;
         return;
     }
-    if (!job_list || job_list->isListEmpty()) {
+    if (job_list.isListEmpty()) {
         std::cerr << "smash error: fg: jobs list is empty" << std::endl;
         return;
     }
     if (cmd_split.size() == 1) {
-        jobToForeground = job_list->getLastJob(nullptr);
+        jobToForeground = job_list.getLastJob(nullptr);
     }
     else {
-        jobToForeground = job_list->getJobById(std::stoi(cmd_split[1]));
+        jobToForeground = job_list.getJobById(std::stoi(cmd_split[1]));
     }
     if (!jobToForeground) {
         string errPrint = "smash error: fg: job-id " + cmd_split[1] + " does not exist" + '\n';
@@ -651,7 +659,7 @@ void ForegroundCommand::execute() {
         return;
     }
     jobToForeground->printJobCmd();
-    SmallShell& shell = SmallShell::getInstance();
+
     if (jobToForeground->getJobStatus() == STOPPED) {
         shell.resumeJobInShell(jobToForeground);
     }
@@ -660,7 +668,7 @@ void ForegroundCommand::execute() {
     CHECK_SYSCALL(waitpid(jobToForeground->getJobPid(),&status,WUNTRACED),waitpid);
     shell.setCmdForeground(0,"");
     if (!WIFSTOPPED(status)) {
-        job_list->removeJobById(jobToForeground->getJobId());
+        job_list.removeJobById(jobToForeground->getJobId());
     }
 }
 
@@ -668,39 +676,35 @@ void ForegroundCommand::execute() {
 
 //////////////////////////////////// BG COMMAND SECTION ////////////////////////////////////
 
-BackgroundCommand::BackgroundCommand(string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), job_list(jobs){}
+BackgroundCommand::BackgroundCommand(string cmd_line) : BuiltInCommand(cmd_line){}
 
 bool isBgValidArguments(const string& cmd_word_2, unsigned long argumentCount) {
     if (argumentCount > 2 || (argumentCount > 1 && !isNumber(cmd_word_2))) {
-        std::cerr << "smash error: bg: invalid arguments" << std::endl;
+        std::cerr << "smash error: bg: invalid arguments\n";
         return false;
     }
     return true;
 }
 
-shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argumentCount, const string& secondArg, JobsList* job_list) {
-    shared_ptr<JobsList::JobEntry> job;
+shared_ptr<JobsList::JobEntry> getJobForBgAndPrintErrors (unsigned long argumentCount, const string& secondArg, JobsList& job_list) {
     if (argumentCount > 1) {
-        job = job_list->getJobById(stoi(secondArg));
+        shared_ptr<JobsList::JobEntry> job = job_list.getJobById(stoi(secondArg));
         if (!job) {
             std::cerr << "smash error: bg: job-id " << secondArg << " does not exist" << std::endl;
         }
+        return job;
     }
     else {
-        job = job_list->getLastStoppedJob();
+        shared_ptr<JobsList::JobEntry> job = job_list.getLastStoppedJob();
         if (!job) {
             std::cerr << "smash error: bg: there is no stopped jobs to resume" << std::endl;
         }
-        //to delete
-//        else {
-//            std::cout << "The pid from last stopped job is " << job->getJobPid() << std::endl;
-//        }
-        //not to delete
+        return job;
     }
-    return job;
+    return nullptr;
 }
 
-bool isJobStoppedAndPrintError (shared_ptr<JobsList::JobEntry> job) {
+bool isJobStoppedAndPrintError (const shared_ptr<JobsList::JobEntry>& job) {
     if (job->getJobStatus() == RUNNING) {
         std::cerr << "smash error: bg: job-id " << to_string(job->getJobId()) << " is already running in the background"
                   << std::endl;
@@ -715,6 +719,8 @@ void BackgroundCommand::execute() {
     if (!isBgValidArguments(secondArg, cmd_split.size())) {
         return;
     }
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& job_list = shell.getJobsList();
     shared_ptr<JobsList::JobEntry> job = getJobForBgAndPrintErrors(cmd_split.size(),secondArg,job_list);
     if (!job) {
         return;
@@ -731,37 +737,41 @@ void BackgroundCommand::execute() {
         return;
     }
     std::cout << job->getCmdLine() << " : " << std::setprecision(0) << job_run_time << std::endl;
-    job_list->resumeJob(job);
+    job_list.resumeJob(job);
 }
 
 //////////////////////////////////// END OF BG COMMAND SECTION ////////////////////////////////////
 
 /////////////////////////// JOBS COMMAND SECTION ///////////////////////////
 
-JobsCommand::JobsCommand(string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), job_list(jobs){
+JobsCommand::JobsCommand(string cmd_line) : BuiltInCommand(cmd_line){
 }
 
 void JobsCommand::execute() {
-    job_list->removeFinishedJobs();
-    job_list->printJobsList();
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& job_list = shell.getJobsList();
+    job_list.removeFinishedJobs();
+    job_list.printJobsList();
 }
 
 /////////////////////////// END OF JOBS COMMAND SECTION ///////////////////////////
 
 /////////////////////////// QUIT COMMAND SECTION ///////////////////////////
 
-QuitCommand::QuitCommand(string cmd_line, JobsList*jobs): BuiltInCommand(cmd_line), jobs(jobs){}
+QuitCommand::QuitCommand(string cmd_line): BuiltInCommand(cmd_line){}
 
 void QuitCommand::execute() {
     if (cmd_line == "quit") {
         throw QuitException();
     }
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& jobs = shell.getJobsList();
     std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     if (cmd_split.size() > 1 && cmd_split[1] == "kill"){
-        jobs->removeFinishedJobs();
-        std::cout << "smash: sending SIGKILL signal to " << to_string(jobs->get_Job_List().size()) << " jobs:" << std::endl;
-        jobs->print_jobs_for_quit_command();
-        jobs->killAllJobs();
+        jobs.removeFinishedJobs();
+        std::cout << "smash: sending SIGKILL signal to " << to_string(jobs.get_Job_List().size()) << " jobs:" << std::endl;
+        jobs.print_jobs_for_quit_command();
+        jobs.killAllJobs();
         throw QuitException();
     }
 }
@@ -770,7 +780,7 @@ void QuitCommand::execute() {
 
 /////////////////////////// KILL COMMAND SECTION ///////////////////////////
 
-KillCommand::KillCommand(string cmd_line, JobsList*jobs): BuiltInCommand(cmd_line), jobs(jobs){}
+KillCommand::KillCommand(string cmd_line): BuiltInCommand(cmd_line){}
 
 bool is_sigment(const string& s1){
     if (s1.length()>3){
@@ -785,17 +795,19 @@ bool is_sigment(const string& s1){
 }
 
 void KillCommand::execute() {
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& jobs = shell.getJobsList();
     std::vector<string> cmd_split = splitStringIntoWords(cmd_line);
     bool second_word_ok,third_word_ok;
     second_word_ok = cmd_split.size() > 1 && is_sigment(cmd_split[1]);
     third_word_ok = cmd_split.size() > 2 && isNumber(cmd_split[2]);
-    jobs->removeFinishedJobs();
+    jobs.removeFinishedJobs();
     if (cmd_split.size() != 3 || !second_word_ok || !third_word_ok ) {
         std::cerr << "smash error: kill: invalid arguments" << std::endl;
         return;
     }
-    shared_ptr<JobsList::JobEntry> job_to_kill = jobs->getJobById(stoi(cmd_split[2]));
-    if(jobs->get_Job_List().empty() || !job_to_kill)
+    shared_ptr<JobsList::JobEntry> job_to_kill = jobs.getJobById(stoi(cmd_split[2]));
+    if(jobs.get_Job_List().empty() || !job_to_kill)
     {
         string printErr = "smash error: kill: job-id " + cmd_split[2] + " does not exist" + '\n';
         std::cerr << printErr;
@@ -804,11 +816,9 @@ void KillCommand::execute() {
     int signal_int=stoi(cmd_split[1].substr(1,cmd_split[1].length()-1));
     CHECK_SYSCALL(kill(job_to_kill->getJobPid(),signal_int),kill);
     if (signal_int == SIGSTOP) {
-        SmallShell& shell = SmallShell::getInstance();
         shell.stopJobInShell(job_to_kill);
     }
     if (signal_int == SIGCONT) {
-        SmallShell& shell = SmallShell::getInstance();
         shell.resumeJobInShell(job_to_kill,false);
     }
     std::cout << "signal number " + to_string(signal_int) + " was sent to pid " + to_string(job_to_kill->getJobPid()) << std::endl;
@@ -819,7 +829,7 @@ void KillCommand::execute() {
 
 /////////////////////////// SETCORE COMMAND SECTION ///////////////////////////
 
-SetcoreCommand::SetcoreCommand(string cmd_line, JobsList *jobs) : BuiltInCommand(cmd_line), jobs(jobs){}
+SetcoreCommand::SetcoreCommand(string cmd_line) : BuiltInCommand(cmd_line){}
 
 
 void SetcoreCommand::execute() {
@@ -834,13 +844,15 @@ void SetcoreCommand::execute() {
         std::cerr << "smash error: setcore: invalid core number" << std::endl;
         return;
     }
-    if (!jobs->getJobById(std::stoi(cmd_split[1])))
+    SmallShell& shell = SmallShell::getInstance();
+    JobsList& jobs = shell.getJobsList();
+    if (!jobs.getJobById(std::stoi(cmd_split[1])))
     {
         string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist" + '\n';
         std::cerr << printErr;
         return;
     }
-    pid_t jobPid= jobs->getJobById(std::stoi(cmd_split[1]))->getJobPid();
+    pid_t jobPid= jobs.getJobById(std::stoi(cmd_split[1]))->getJobPid();
     cpu_set_t mask;
     CPU_ZERO(&mask);
     CPU_SET(std::stoi(cmd_split[2]), &mask);
@@ -872,7 +884,7 @@ const char* get_file_type(const char *path) {
 long get_file_size(const char *path) {
     struct stat st;
     if (stat(path, &st) == -1) {
-        perror("smash error: stat failed\n");
+        perror("smash error: stat failed");
         return -1;
     }
     return st.st_size;
@@ -1037,6 +1049,7 @@ shared_ptr<JobsList::JobEntry> JobsList::getJobByCmd(shared_ptr<Command> cmd) {
 }
 
 void JobsList::addJob(pid_t pid, string cmd_line, bool isStopped) {
+    removeFinishedJobs();
     shared_ptr<JobsList::JobEntry> job = getJobByPid(pid);
     if (job) {
         if (isStopped) {
@@ -1047,8 +1060,7 @@ void JobsList::addJob(pid_t pid, string cmd_line, bool isStopped) {
         }
         return;
     }
-    time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time, current_time);
-    shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, pid, current_time, cmd_line);
+    shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, pid, cmd_line);
     if (isStopped) {
         stopJob(newJob);
     }
@@ -1061,7 +1073,7 @@ void JobsList::resumeJob(shared_ptr<JobsList::JobEntry> job, bool toCont) {
         CHECK_SYSCALL(kill(job->getJobPid(),SIGCONT),kill);
     }
     job->setJobStatus(RUNNING);
-    for (auto it = stoppedJobs.begin(); it != stoppedJobs.end(); it++) {
+    for (auto it = stoppedJobs.begin(); it != stoppedJobs.end(); ++it) {
         if ((*it)->getJobPid() == job->getJobPid()) {
             stoppedJobs.erase(it);
             break;
@@ -1200,7 +1212,7 @@ void JobsList::stopJob(shared_ptr<JobEntry> jobToStop) {
 }
 
 shared_ptr<JobsList::JobEntry> JobsList::getJobByPid(pid_t pid) {
-    for (auto job : job_list) {
+    for (auto & job : job_list) {
         if (job->getJobPid() == pid) {
             return job;
         }
@@ -1210,7 +1222,7 @@ shared_ptr<JobsList::JobEntry> JobsList::getJobByPid(pid_t pid) {
 
 /////////////////////////// JOB ENTRY SECTION ///////////////////////////
 
-JobsList::JobEntry::JobEntry(int jobId, pid_t jobPid, time_t timeCreated, string cmd_line) : status(RUNNING), jobId(jobId), jobPid(jobPid), cmd_line(cmd_line) {
+JobsList::JobEntry::JobEntry(int jobId, pid_t jobPid, string cmd_line) : status(RUNNING), jobId(jobId), jobPid(jobPid), cmd_line(cmd_line) {
     this->timeCreated = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,this->timeCreated);
 }
 

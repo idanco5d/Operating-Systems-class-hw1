@@ -13,10 +13,10 @@ smash> smash> 0
 smash> 2
 smash: got ctrl-C
 smash> smash> smash> smash> smash> smash: got ctrl-C
-smash> smash> smash> smash> [3] timeout 5 sleep 100& : 3 X secs
-[4] timeout 4 sleep 200& : 4 X secs
-[5] timeout 2 sleep 300& : 5 X secs
-[6] timeout 7 sleep 400& : 6 X secs
+smash> smash> smash> smash> [1] timeout 5 sleep 100& : 3 X secs
+[2] timeout 4 sleep 200& : 4 X secs
+[3] timeout 2 sleep 300& : 5 X secs
+[4] timeout 7 sleep 400& : 6 X secs
 smash> smash> smash> smash: got ctrl-C
 smash: process 7 was killed
 smash> smash> smash: got ctrl-C

@@ -1,0 +1,7 @@
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         --verbose \
+         --log-file=valgrindout_detailed.txt \
+         --trace-children=yes \
+         ./tests/runner/runner.sh
