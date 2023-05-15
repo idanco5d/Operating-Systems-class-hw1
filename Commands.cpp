@@ -582,13 +582,9 @@ void BackgroundCommand::execute() {
     if (!isJobStoppedAndPrintError(job)) {
         return;
     }
-//    string toPrint = job->getCmdLine();
-//    toPrint += " : " + std::to_string(job->getJobPid()) + '\n';
-//    std::cout << toPrint;
     std::cout << job->getCmdLine() << " : " << job->getJobPid() << std::endl;
     CHECK_SYSCALL(kill(job->getJobPid(),SIGCONT),kill);
     job->setJobStatus(RUNNING);
-    //SmallShell::getInstance().getJobsList().resumeJob(job);
 }
 
 //////////////////////////////////// END OF BG COMMAND SECTION ////////////////////////////////////
