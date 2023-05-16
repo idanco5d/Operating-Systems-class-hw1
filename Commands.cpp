@@ -770,7 +770,7 @@ int validation_ch(int mode) {
 
 void ChmodCommand::execute() {
     int mode= cmd_split.size() > 1 ? validation_ch(std::stoi(cmd_split[1],0,8)) : -1;
-    if ( cmd_split.size() != 3 || ! isNumber(cmd_split[1]) || mode==-1) {
+    if ( cmd_split.size() != 3 || ! isNumber(cmd_split[1]) || (std::stoi(cmd_split[1]) < 0 || std::stoi(cmd_split[1]) > 777)) {
         std::cerr << "smash error: chmod: invalid arguments" << std::endl;
         return;
     }
