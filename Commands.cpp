@@ -510,7 +510,7 @@ void ForegroundCommand::execute() {
         jobToForeground = SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1]));
     }
     if (!jobToForeground) {
-        string errPrint = "smash error: fg: job-id " + cmd_split[1] + " does not exist" + '\n';
+        string errPrint = "smash error: fg: job-id " + cmd_split[1] + " does not exist";
         std::cerr << errPrint << std::endl;
         return;
     }
@@ -536,7 +536,7 @@ BackgroundCommand::BackgroundCommand(string cmd_line, std::vector<string> cmd_sp
 
 bool isBgValidArguments(const string& cmd_word_2, unsigned long argumentCount) {
     if (argumentCount > 2 || (argumentCount > 1 && !isNumber(cmd_word_2))) {
-        std::cerr << "smash error: bg: invalid arguments\n";
+        std::cerr << "smash error: bg: invalid arguments" << std::endl;
         return false;
     }
     return true;
@@ -648,8 +648,8 @@ void KillCommand::execute() {
     shared_ptr<JobsList::JobEntry> job_to_kill = SmallShell::getInstance().getJobsList().getJobById(stoi(cmd_split[2]));
     if(SmallShell::getInstance().getJobsList().get_Job_List().empty() || !job_to_kill)
     {
-        string printErr = "smash error: kill: job-id " + cmd_split[2] + " does not exist" + '\n';
-        std::cerr << printErr;
+        string printErr = "smash error: kill: job-id " + cmd_split[2] + " does not exist";
+        std::cerr << printErr << std::endl;
         return;
     }
     int signal_int=stoi(cmd_split[1].substr(1,cmd_split[1].length()-1));
@@ -685,8 +685,8 @@ void SetcoreCommand::execute() {
     //JobsList& jobs = SmallShell::getInstance().getJobsList();
     if (!SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1])))
     {
-        string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist" + '\n';
-        std::cerr << printErr;
+        string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist";
+        std::cerr << printErr << std::endl;
         return;
     }
     pid_t jobPid= SmallShell::getInstance().getJobsList().getJobById(std::stoi(cmd_split[1]))->getJobPid();
@@ -737,8 +737,8 @@ void GetFileTypeCommand::execute() {
         return;
     }
     if( strcmp(theType,"unknown")==0){
-        string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist" + '\n';
-        std::cerr << printErr;
+        string printErr = "smash error: setcore: job-id " + cmd_split[1] + " does not exist";
+        std::cerr << printErr << std::endl;
         return;
     }
     else

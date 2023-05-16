@@ -1,20 +1,20 @@
-==20663== Memcheck, a memory error detector
-==20663== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==20663== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==20663== Command: /mnt/c/Users/illus/os/hw/1/smash
-==20663== Parent PID: 20647
-==20663== 
-==20663== 
-==20663== FILE DESCRIPTORS: 4 open (3 std) at exit.
-==20663== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_bg1.valgrind
-==20663==    <inherited from parent>
-==20663== 
-==20663== 
-==20663== HEAP SUMMARY:
-==20663==     in use at exit: 0 bytes in 0 blocks
-==20663==   total heap usage: 42 allocs, 42 frees, 80,280 bytes allocated
-==20663== 
-==20663== All heap blocks were freed -- no leaks are possible
-==20663== 
-==20663== For lists of detected and suppressed errors, rerun with: -s
-==20663== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==7717== Memcheck, a memory error detector
+==7717== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==7717== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==7717== Command: /mnt/c/Users/illus/os/hw/1/smash
+==7717== Parent PID: 7703
+==7717== 
+==7717== 
+==7717== FILE DESCRIPTORS: 4 open (3 std) at exit.
+==7717== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_bg1.valgrind
+==7717==    <inherited from parent>
+==7717== 
+==7717== 
+==7717== HEAP SUMMARY:
+==7717==     in use at exit: 0 bytes in 0 blocks
+==7717==   total heap usage: 42 allocs, 42 frees, 80,280 bytes allocated
+==7717== 
+==7717== All heap blocks were freed -- no leaks are possible
+==7717== 
+==7717== For lists of detected and suppressed errors, rerun with: -s
+==7717== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

@@ -50,23 +50,23 @@ class ExternalCommand : public Command {
   //not to delete
 };
 
-class PipeCommand : public Command {
-  // TODO: Add your data members
- public:
-  PipeCommand(string cmd_line);
-  virtual ~PipeCommand() {}
-  void execute() override;
-};
-
-class RedirectionCommand : public Command {
- // TODO: Add your data members
- public:
-  explicit RedirectionCommand(string cmd_line);
-  virtual ~RedirectionCommand() {}
-  void execute() override;
-  //void prepare() override;
-  //void cleanup() override;
-};
+//class PipeCommand : public Command {
+//  // TODO: Add your data members
+// public:
+//  PipeCommand(string cmd_line);
+//  virtual ~PipeCommand() {}
+//  void execute() override;
+//};
+//
+//class RedirectionCommand : public Command {
+// // TODO: Add your data members
+// public:
+//  explicit RedirectionCommand(string cmd_line);
+//  virtual ~RedirectionCommand() {}
+//  void execute() override;
+//  //void prepare() override;
+//  //void cleanup() override;
+//};
 
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members public:

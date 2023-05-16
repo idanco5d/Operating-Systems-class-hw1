@@ -1,20 +1,20 @@
-==23178== Memcheck, a memory error detector
-==23178== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==23178== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==23178== Command: /mnt/c/Users/illus/os/hw/1/smash
-==23178== Parent PID: 23173
-==23178== 
-==23178== 
-==23178== FILE DESCRIPTORS: 4 open (3 std) at exit.
-==23178== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_tail2.valgrind
-==23178==    <inherited from parent>
-==23178== 
-==23178== 
-==23178== HEAP SUMMARY:
-==23178==     in use at exit: 0 bytes in 0 blocks
-==23178==   total heap usage: 224 allocs, 224 frees, 86,726 bytes allocated
-==23178== 
-==23178== All heap blocks were freed -- no leaks are possible
-==23178== 
-==23178== For lists of detected and suppressed errors, rerun with: -s
-==23178== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==9618== Memcheck, a memory error detector
+==9618== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==9618== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==9618== Command: /mnt/c/Users/illus/os/hw/1/smash
+==9618== Parent PID: 9613
+==9618== 
+==9618== 
+==9618== FILE DESCRIPTORS: 4 open (3 std) at exit.
+==9618== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_tail2.valgrind
+==9618==    <inherited from parent>
+==9618== 
+==9618== 
+==9618== HEAP SUMMARY:
+==9618==     in use at exit: 0 bytes in 0 blocks
+==9618==   total heap usage: 224 allocs, 224 frees, 86,726 bytes allocated
+==9618== 
+==9618== All heap blocks were freed -- no leaks are possible
+==9618== 
+==9618== For lists of detected and suppressed errors, rerun with: -s
+==9618== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
