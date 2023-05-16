@@ -35,6 +35,10 @@ sys/stat.h
 -
 fcntl.h
 -
+iomanip
+-
+unistd.h
+-
 
 /mnt/c/Users/illus/os/hw/1/Commands.h
 vector

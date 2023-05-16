@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <iomanip>
+#include <unistd.h>
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -677,7 +678,7 @@ void SetcoreCommand::execute() {
         return;
     }
     int num_cores = CHECK_SYSCALL_AND_GET_VALUE_RVOID(sysconf(_SC_NPROCESSORS_ONLN),sysconf,num_cores);
-    if (num_cores< std::stoi(cmd_split[2]))
+    if (num_cores - 1 < std::stoi(cmd_split[2]) || std::stoi(cmd_split[2]) < 0)
     {
         std::cerr << "smash error: setcore: invalid core number" << std::endl;
         return;
@@ -705,7 +706,7 @@ GetFileTypeCommand::GetFileTypeCommand(string cmd_line, std::vector<string> cmd_
 
 const char* get_file_type(const char *path) {
     struct stat st;
-    CHECK_SYSCALL_PTRS(stat(path, &st),stat);
+    CHECK_SYSCALL_PTRS(lstat(path, &st),lstat);
     switch (st.st_mode & S_IFMT) {
         case S_IFBLK:  return "block device";
         case S_IFCHR:  return "character device";
@@ -775,7 +776,6 @@ void ChmodCommand::execute() {
     }
     CHECK_SYSCALL(chmod(cmd_split[2].c_str(),static_cast<mode_t>(mode)),chmod);
 }
-
 
 /////////////////////////// END OF GETFILETYPE COMMAND SECTION ///////////////////////////
 
