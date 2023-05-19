@@ -39,6 +39,8 @@ iomanip
 -
 unistd.h
 -
+cmath
+-
 
 /mnt/c/Users/illus/os/hw/1/Commands.h
 vector

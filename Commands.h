@@ -22,13 +22,19 @@ protected:
     string cmd_line;
     std::vector<string> cmd_split;
     pid_t pid;
+    bool isTimedOut;
+    int timer;
  public:
-  Command(string cmd_line, std::vector<string> cmd_split, pid_t pid = 0);
+    std::string timeoutCmdLine;
+    time_t alarmCreatedAt;
+  Command(string cmd_line, std::vector<string> cmd_split, pid_t pid = 0, bool isTimedOut = false, int timer = 0, std::string timeoutCmdLine = "", time_t alarmCreatedAt = 0);
   virtual ~Command();
   virtual void execute() = 0;
   string getCmdLine() const;
   void setPid(pid_t pid);
   pid_t getPid() const;
+  void toBeTimedOut();
+  void setTimer(int timer);
   //virtual void prepare();
   //virtual void cleanup();
   // TODO: Add your extra methods if needed
@@ -41,6 +47,7 @@ class BuiltInCommand : public Command {
 };
 
 class ExternalCommand : public Command {
+
  public:
   ExternalCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ExternalCommand() =default;
@@ -128,12 +135,21 @@ private:
 //      void printJob() const;
       //not to delete
   };
+ class TimeoutEntry {
+ public:
+     pid_t pid;
+     time_t timeCreated;
+     int timer;
+     string cmd_line;
+     TimeoutEntry(pid_t pid, time_t timeCreated, int timer, string cmd_line);
+     ~TimeoutEntry()=default;
+ };
  // TODO: Add your data members
 private:
     std::vector<shared_ptr<JobEntry>> job_list;
     int maximalJobId;
+    std::vector<TimeoutEntry> timed_jobs;
 public:
-
   JobsList();
   ~JobsList()=default;
   void addJob(pid_t pid, string cmd_line, bool isStopped = false);
@@ -153,8 +169,15 @@ public:
   bool isCmdInList(shared_ptr<Command> cmd) const;
   shared_ptr<JobEntry> getJobByCmd(shared_ptr<Command> cmd);
   void stopJob(shared_ptr<JobEntry> jobToStop);
+  void addTimeoutJob(pid_t pid, time_t timeCreated, int timer, string cmd_line);
+  std::vector<TimeoutEntry>& getTimeoutEntries();
+  void removeTimedJobByPid(pid_t pid);
   // TODO: Add extra methods or modify exisitng ones as needed
     shared_ptr<JobsList::JobEntry> getJobByPid(pid_t pid);
+    bool areThereTimedJobs() const;
+    void setClosestAlarm() const;
+    void removeJobByPid(pid_t pid);
+    double getMinTimeoutLeft() const;
 };
 
 class JobsCommand : public BuiltInCommand {
@@ -186,7 +209,7 @@ class TimeoutCommand : public BuiltInCommand {
 /* Bonus */
 // TODO: Add your data members
  public:
-  explicit TimeoutCommand(string cmd_line);
+  explicit TimeoutCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~TimeoutCommand() {}
   void execute() override;
 };
@@ -260,6 +283,11 @@ class SmallShell {
   void setPrevDir(string newDir);
   string getForegroundProcessCmdLine() const;
   JobsList& getJobsList();
+  bool areThereTimedJobsInShell() const;
+  void setClosestAlarmInShell() const;
+  void removeTimedJobByPidFromShell(pid_t pid);
+  void removeJobFromShellByPid(pid_t pid);
+  double getMinTimeoutLeftFromShell() const;
 };
 
 class QuitException : public std::exception {};

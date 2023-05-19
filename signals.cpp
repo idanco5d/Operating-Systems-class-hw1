@@ -4,6 +4,7 @@
 #include "Commands.h"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <cmath>
 
 
 #define CHECK_SYSCALL_AND_GET_VALUE_RVOID( syscall, syscall_name, var_name) \
@@ -55,5 +56,25 @@ void ctrlCHandler(int sig_num) {
 
 void alarmHandler(int sig_num) {
   // TODO: Add your implementation
+  SmallShell::getInstance().getJobsList().removeFinishedJobs();
+  std::vector<JobsList::TimeoutEntry>& timedJobs = SmallShell::getInstance().getJobsList().getTimeoutEntries();
+  time_t now = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr), time, now);
+  std::cout << "smash: got an alarm" << std::endl;
+  for (auto & process : timedJobs) {
+      double time_passed = CHECK_SYSCALL_AND_GET_VALUE_RVOID(difftime(now, process.timeCreated),difftime, time_passed);
+      if (time_passed >= process.timer) {
+          pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid(process.pid,nullptr,WNOHANG),waitpid,waitReturnValue);
+          if (waitReturnValue == 0) {
+              std::cout << "smash: " + process.cmd_line + " timed out!" << std::endl;
+              CHECK_SYSCALL(kill(process.pid,SIGKILL),kill);
+              SmallShell::getInstance().removeJobFromShellByPid(process.pid);
+              SmallShell::getInstance().removeTimedJobByPidFromShell(process.pid);
+              break;
+          }
+      }
+  }
+  if (SmallShell::getInstance().areThereTimedJobsInShell()) {
+      SmallShell::getInstance().setClosestAlarmInShell();
+  }
 }
 

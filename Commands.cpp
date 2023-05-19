@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <unistd.h>
+#include <cmath>
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -223,6 +224,10 @@ shared_ptr<Command> SmallShell::CreateCommand(const string& cmd_line) {
   else if (cmd_words[0] == "chmod") {
       return std::make_shared<ChmodCommand>(cmd_line, cmd_words);
   }
+  else if (cmd_words[0] == "timeout") {
+      std::vector<string> cmd_words_for_timeout = splitStringIntoWords(cmd_line);
+      return std::make_shared<TimeoutCommand>(cmd_line, cmd_words_for_timeout);
+  }
   else {
       return std::make_shared<ExternalCommand>(cmd_line, cmd_words);
   }
@@ -371,11 +376,31 @@ JobsList &SmallShell::getJobsList() {
     return jobs_list;
 }
 
+bool SmallShell::areThereTimedJobsInShell() const {
+    return jobs_list.areThereTimedJobs();
+}
+
+void SmallShell::setClosestAlarmInShell() const {
+    jobs_list.setClosestAlarm();
+}
+
+void SmallShell::removeTimedJobByPidFromShell(pid_t pid) {
+    jobs_list.removeTimedJobByPid(pid);
+}
+
+void SmallShell::removeJobFromShellByPid(pid_t pid) {
+    jobs_list.removeJobByPid(pid);
+}
+
+double SmallShell::getMinTimeoutLeftFromShell() const {
+    return jobs_list.getMinTimeoutLeft();
+}
+
 /////////////////////////// END OF SMALLSHELL CLASS SECTION ///////////////////////////
 
 /////////////////////////// GENERAL COMMANDS SECTION ///////////////////////////
 
-Command::Command(string cmd_line, std::vector<string> cmd_split, pid_t pid) : cmd_line(cmd_line), cmd_split(cmd_split), pid(pid) {
+Command::Command(string cmd_line, std::vector<string> cmd_split, pid_t pid, bool isTimedOut, int timer, std::string timeoutCmdLine, time_t alarmCreatedAt) : cmd_line(cmd_line), cmd_split(cmd_split), pid(pid), isTimedOut(isTimedOut), timer(timer), timeoutCmdLine(timeoutCmdLine), alarmCreatedAt(alarmCreatedAt) {
 
 }
 
@@ -792,17 +817,32 @@ bool isComplexExternalCommand (string cmd_line) {
     return false;
 }
 
-void runExternalCommand(const char* prog, char * const * args, string& cmd_line) {
+void runExternalCommand(const char* prog, char * const * args, string& cmd_line, bool isTimedOut, int timer, string& timeoutCmdLine, time_t alarmCreatedAt) {
     bool isBGCommand = _isBackgroundComamnd(cmd_line.c_str());
     pid_t pid = CHECK_SYSCALL_AND_GET_VALUE_RVOID(fork(), fork, pid);
     if (pid > 0) {
+        if (isTimedOut) {
+            SmallShell::getInstance().getJobsList().removeFinishedJobs();
+            //to delete!!!
+//            std::cout << timeoutCmdLine << " : pid is " << pid << std::endl;
+            //not to delete
+            SmallShell::getInstance().getJobsList().addTimeoutJob(pid, alarmCreatedAt, timer, timeoutCmdLine);
+        }
         if (isBGCommand) {
-            SmallShell::getInstance().addJobToShell(pid,cmd_line);
+            if (isTimedOut) {
+                SmallShell::getInstance().addJobToShell(pid,timeoutCmdLine);
+            }
+            else {
+                SmallShell::getInstance().addJobToShell(pid,cmd_line);
+            }
         }
         else {
             SmallShell::getInstance().setCmdForeground(pid,cmd_line);
             CHECK_SYSCALL(waitpid(pid, nullptr, WUNTRACED),waitpid);
             SmallShell::getInstance().setCmdForeground(0,"");
+            if (isTimedOut) {
+                SmallShell::getInstance().removeTimedJobByPidFromShell(pid);
+            }
         }
     }
     else {
@@ -835,15 +875,23 @@ void ExternalCommand::execute() {
         char bashStr[] = "bash";
         char minusCStr[] = "-c";
         char* args_for_complex[4] = {bashStr, minusCStr, const_cast<char*>(cmd_line_cpy_str.c_str()), nullptr};
-        runExternalCommand("/bin/bash",args_for_complex,cmd_line);
+        runExternalCommand("/bin/bash",args_for_complex,cmd_line, isTimedOut, timer, timeoutCmdLine,alarmCreatedAt);
     }
     else {
         char** args_for_simple= new char*[cmd_split.size()+1];
         args_for_simple[cmd_split.size()] = nullptr;
         copyWordsIntoArgs(cmd_split,args_for_simple);
-        runExternalCommand(args_for_simple[0],args_for_simple,cmd_line);
+        runExternalCommand(args_for_simple[0],args_for_simple,cmd_line, isTimedOut, timer, timeoutCmdLine,alarmCreatedAt);
         deleteWordsArgs(args_for_simple,cmd_split.size());
     }
+}
+
+void Command::toBeTimedOut() {
+    isTimedOut = true;
+}
+
+void Command::setTimer(int timer) {
+    this->timer = timer;
 }
 
 
@@ -851,7 +899,7 @@ void ExternalCommand::execute() {
 
 /////////////////////////// JOBS CLASSES SECTION ///////////////////////////
 
-JobsList::JobsList() : job_list(), maximalJobId(0) {}
+JobsList::JobsList() : job_list(), maximalJobId(0), timed_jobs() {}
 
 bool JobsList::isCmdInList(shared_ptr<Command> cmd) const {
     if (!cmd) {
@@ -946,6 +994,7 @@ void JobsList::removeFinishedJobs(){
         pid_t waitReturnValue = CHECK_SYSCALL_AND_GET_VALUE_RVOID(waitpid((*it)->getJobPid(), nullptr,WNOHANG),waitpid,waitReturnValue);
         if(waitReturnValue > 0)
         {
+            removeTimedJobByPid((*it)->getJobPid());
             it = job_list.erase(it);
         }
         else
@@ -1035,6 +1084,86 @@ shared_ptr<JobsList::JobEntry> JobsList::getJobByPid(pid_t pid) {
     return nullptr;
 }
 
+void JobsList::addTimeoutJob(pid_t pid, time_t timeCreated, int timer, string cmd_line) {
+    TimeoutEntry entry(pid,timeCreated,timer, cmd_line);
+    timed_jobs.push_back(entry);
+}
+
+std::vector<JobsList::TimeoutEntry> &JobsList::getTimeoutEntries() {
+    return timed_jobs;
+}
+
+void JobsList::removeTimedJobByPid(pid_t pid) {
+    for (auto it = timed_jobs.begin(); it != timed_jobs.end(); it++) {
+        if (it->pid == pid) {
+            //to delete!!!
+            //std::cout << "In removed timed job, we are removing " << it->cmd_line << std::endl;
+            //not to delete
+            timed_jobs.erase(it);
+            return;
+        }
+    }
+    //to delete!!!
+//    std::cout << "After removing pid" << pid << " timed jobs are: " << std::endl;
+//    for (auto & process : timed_jobs) {
+//        std::cout << process.cmd_line << std::endl;
+//    }
+    //not to delete
+}
+
+bool JobsList::areThereTimedJobs() const {
+    return !timed_jobs.empty();
+}
+
+void JobsList::setClosestAlarm() const {
+    if (timed_jobs.empty()) {
+        return;
+    }
+    int minTimer = -1;
+    TimeoutEntry entry(0,0,0,"");
+    for (auto & process : timed_jobs) {
+        if (minTimer == -1 || process.timer < minTimer) {
+            minTimer = process.timer;
+            entry = process;
+        }
+    }
+    if (entry.pid == 0) {
+        return;
+    }
+    time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,current_time);
+    int time_passed_from_entry = CHECK_SYSCALL_AND_GET_VALUE_RVOID(ceil(difftime(current_time,entry.timeCreated)),difftime,time_passed_from_entry);
+    int when_to_alert = entry.timer - time_passed_from_entry;
+    if (when_to_alert <= 0) {
+        when_to_alert = 1;
+    }
+    alarm(when_to_alert);
+}
+
+void JobsList::removeJobByPid(pid_t pid) {
+    for(auto it = job_list.begin(); it != job_list.end();++it) {
+        if ((*it)->getJobPid() == pid) {
+            job_list.erase(it);
+            return;
+        }
+    }
+}
+
+double JobsList::getMinTimeoutLeft() const {
+    double min = -1;
+    time_t now = time(nullptr);
+    if (now == -1) {
+        perror("smash error: time failed");
+    }
+    for (auto & process : timed_jobs) {
+        double currCreatedToNow = difftime(process.timeCreated,now);
+        double currTimeoutLeft = process.timer - currCreatedToNow;
+        if (min == -1 || currTimeoutLeft < min) {
+            min = currTimeoutLeft;
+        }
+    }
+    return min;
+}
+
 /////////////////////////// JOB ENTRY SECTION ///////////////////////////
 
 JobsList::JobEntry::JobEntry(int jobId, pid_t jobPid, string cmd_line) : status(RUNNING), jobId(jobId), jobPid(jobPid), cmd_line(cmd_line) {
@@ -1075,3 +1204,34 @@ JobStatus JobsList::JobEntry::getJobStatus() const {
 /////////////////////////// END OF JOB ENTRY SECTION ///////////////////////////
 
 /////////////////////////// END OF JOBS SECTION ///////////////////////////
+TimeoutCommand::TimeoutCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line,cmd_split) {
+
+}
+
+JobsList::TimeoutEntry::TimeoutEntry(pid_t pid, time_t timeCreated, int timer, string cmd_line) : pid(pid), timeCreated(timeCreated), timer(timer), cmd_line(cmd_line) {
+}
+
+void TimeoutCommand::execute() {
+    if (cmd_split.size() < 3 || !isNumber(cmd_split[1]) || std::stoi(cmd_split[1]) < 0) {
+        std::cerr << "smash error: timeout: invalid arguments" << std::endl;
+        return;
+    }
+    string cmd_line_without_timeout;
+    for (unsigned int i = 2; i < cmd_split.size(); i++) {
+        string addSpaceIfRequired;
+        if (i != cmd_split.size() - 1) {
+            addSpaceIfRequired += " ";
+        }
+        cmd_line_without_timeout += cmd_split[i] + addSpaceIfRequired;
+    }
+    std::shared_ptr<Command> cmd = SmallShell::getInstance().CreateCommand(cmd_line_without_timeout);
+    cmd->toBeTimedOut();
+    cmd->setTimer(std::stoi(cmd_split[1]));
+    cmd->timeoutCmdLine = cmd_line;
+    time_t current_time = CHECK_SYSCALL_AND_GET_VALUE_RVOID(time(nullptr),time,current_time);
+    cmd->alarmCreatedAt = current_time;
+    if (!SmallShell::getInstance().areThereTimedJobsInShell() || SmallShell::getInstance().getMinTimeoutLeftFromShell() > std::stoi(cmd_split[1])) {
+        alarm(std::stoi(cmd_split[1]));
+    }
+    cmd->execute();
+}
