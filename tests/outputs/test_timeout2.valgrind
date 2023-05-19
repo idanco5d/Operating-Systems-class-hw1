@@ -1,20 +1,20 @@
-==2945== Memcheck, a memory error detector
-==2945== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==2945== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==2945== Command: /mnt/c/Users/illus/os/hw/1/smash
-==2945== Parent PID: 2939
-==2945== 
-==2945== 
-==2945== FILE DESCRIPTORS: 4 open (3 std) at exit.
-==2945== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_timeout2.valgrind
-==2945==    <inherited from parent>
-==2945== 
-==2945== 
-==2945== HEAP SUMMARY:
-==2945==     in use at exit: 0 bytes in 0 blocks
-==2945==   total heap usage: 124 allocs, 124 frees, 84,138 bytes allocated
-==2945== 
-==2945== All heap blocks were freed -- no leaks are possible
-==2945== 
-==2945== For lists of detected and suppressed errors, rerun with: -s
-==2945== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==7860== Memcheck, a memory error detector
+==7860== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==7860== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==7860== Command: /mnt/c/Users/illus/os/hw/1/smash
+==7860== Parent PID: 7855
+==7860== 
+==7860== 
+==7860== FILE DESCRIPTORS: 4 open (3 std) at exit.
+==7860== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_timeout2.valgrind
+==7860==    <inherited from parent>
+==7860== 
+==7860== 
+==7860== HEAP SUMMARY:
+==7860==     in use at exit: 0 bytes in 0 blocks
+==7860==   total heap usage: 124 allocs, 124 frees, 84,106 bytes allocated
+==7860== 
+==7860== All heap blocks were freed -- no leaks are possible
+==7860== 
+==7860== For lists of detected and suppressed errors, rerun with: -s
+==7860== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

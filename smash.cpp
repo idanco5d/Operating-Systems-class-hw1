@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     sa.sa_handler = alarmHandler;
     sa.sa_flags = SA_RESTART;
     sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGALRM, &sa, NULL)==-1) {
+    if (sigaction(SIGALRM, &sa, nullptr)==-1) {
         perror("smash error: failed to set sigalarm handler");
     }
     //TODO: setup sig alarm handler

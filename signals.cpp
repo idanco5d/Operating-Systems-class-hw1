@@ -48,7 +48,6 @@ void ctrlCHandler(int sig_num) {
         if (waitReturnValue == 0) {
             CHECK_SYSCALL(kill(cmdPid,SIGKILL),kill);
             std::cout << "smash: process "+ to_string(cmdPid) + " was killed" << std::endl;
-            //delete cmd;
             SmallShell::getInstance().setCmdForeground(0,"");
         }
     }

@@ -1,48 +1,48 @@
-==2198== Memcheck, a memory error detector
-==2198== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
-==2198== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
-==2198== Command: /mnt/c/Users/illus/os/hw/1/smash
-==2198== Parent PID: 2193
-==2198== 
-==2198== 
-==2198== FILE DESCRIPTORS: 8 open (3 std) at exit.
-==2198== Open file descriptor 11: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.err
-==2198==    at 0x4CB18CB: dup (syscall-template.S:120)
-==2198==    by 0x404FB6: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x4196AF: main (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198== 
-==2198== Open file descriptor 8:
-==2198==    at 0x4CB18CB: dup (syscall-template.S:120)
-==2198==    by 0x404F7C: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x4196AF: main (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198== 
-==2198== Open file descriptor 7: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.out
-==2198==    at 0x4CB18CB: dup (syscall-template.S:120)
-==2198==    by 0x404FB6: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x4196AF: main (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198== 
-==2198== Open file descriptor 6:
-==2198==    at 0x4CB18CB: dup (syscall-template.S:120)
-==2198==    by 0x404F7C: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198==    by 0x4196AF: main (in /mnt/c/Users/illus/os/hw/1/smash)
-==2198== 
-==2198== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.valgrind
-==2198==    <inherited from parent>
-==2198== 
-==2198== 
-==2198== HEAP SUMMARY:
-==2198==     in use at exit: 0 bytes in 0 blocks
-==2198==   total heap usage: 101 allocs, 101 frees, 82,383 bytes allocated
-==2198== 
-==2198== All heap blocks were freed -- no leaks are possible
-==2198== 
-==2198== For lists of detected and suppressed errors, rerun with: -s
-==2198== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==7094== Memcheck, a memory error detector
+==7094== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==7094== Using Valgrind-3.20.0 and LibVEX; rerun with -h for copyright info
+==7094== Command: /mnt/c/Users/illus/os/hw/1/smash
+==7094== Parent PID: 7089
+==7094== 
+==7094== 
+==7094== FILE DESCRIPTORS: 8 open (3 std) at exit.
+==7094== Open file descriptor 11: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.err
+==7094==    at 0x4CB18CB: dup (syscall-template.S:120)
+==7094==    by 0x404FB6: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x41936F: main (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094== 
+==7094== Open file descriptor 8:
+==7094==    at 0x4CB18CB: dup (syscall-template.S:120)
+==7094==    by 0x404F7C: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x41936F: main (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094== 
+==7094== Open file descriptor 7: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.out
+==7094==    at 0x4CB18CB: dup (syscall-template.S:120)
+==7094==    by 0x404FB6: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x41936F: main (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094== 
+==7094== Open file descriptor 6:
+==7094==    at 0x4CB18CB: dup (syscall-template.S:120)
+==7094==    by 0x404F7C: SmallShell::handlePipeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405570: SmallShell::handlePipeIoCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, bool) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x405868: SmallShell::executeCommand(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >) (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094==    by 0x41936F: main (in /mnt/c/Users/illus/os/hw/1/smash)
+==7094== 
+==7094== Open file descriptor 3: /mnt/c/Users/illus/os/hw/1/tests/outputs/test_pipe4.valgrind
+==7094==    <inherited from parent>
+==7094== 
+==7094== 
+==7094== HEAP SUMMARY:
+==7094==     in use at exit: 0 bytes in 0 blocks
+==7094==   total heap usage: 101 allocs, 101 frees, 82,383 bytes allocated
+==7094== 
+==7094== All heap blocks were freed -- no leaks are possible
+==7094== 
+==7094== For lists of detected and suppressed errors, rerun with: -s
+==7094== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

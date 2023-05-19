@@ -404,14 +404,6 @@ Command::Command(string cmd_line, std::vector<string> cmd_split, pid_t pid, bool
 
 }
 
-string Command::getCmdLine() const {
-    return cmd_line;
-}
-
-void Command::setPid(pid_t pid) {
-    this->pid = pid;
-}
-
 pid_t Command::getPid() const {
     return pid;
 }
@@ -518,7 +510,6 @@ void ChangeDirCommand::execute() {
 ForegroundCommand::ForegroundCommand(string cmd_line, std::vector<string> cmd_split) : BuiltInCommand(cmd_line, cmd_split){}
 
 void ForegroundCommand::execute() {
-    //JobsList& job_list = SmallShell::getInstance().getJobsList();
     SmallShell::getInstance().getJobsList().removeFinishedJobs();
     shared_ptr<JobsList::JobEntry> jobToForeground;
     if (cmd_split.size() > 2 || (cmd_split.size() == 2 && !isNumber(cmd_split[1]))) {
@@ -823,9 +814,6 @@ void runExternalCommand(const char* prog, char * const * args, string& cmd_line,
     if (pid > 0) {
         if (isTimedOut) {
             SmallShell::getInstance().getJobsList().removeFinishedJobs();
-            //to delete!!!
-//            std::cout << timeoutCmdLine << " : pid is " << pid << std::endl;
-            //not to delete
             SmallShell::getInstance().getJobsList().addTimeoutJob(pid, alarmCreatedAt, timer, timeoutCmdLine);
         }
         if (isBGCommand) {
@@ -901,30 +889,6 @@ void Command::setTimer(int timer) {
 
 JobsList::JobsList() : job_list(), maximalJobId(0), timed_jobs() {}
 
-bool JobsList::isCmdInList(shared_ptr<Command> cmd) const {
-    if (!cmd) {
-        return false;
-    }
-    for (const auto & it : job_list) {
-        if (it->getJobPid() == cmd->getPid()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-shared_ptr<JobsList::JobEntry> JobsList::getJobByCmd(shared_ptr<Command> cmd) {
-    if (!cmd) {
-        return nullptr;
-    }
-    for (auto & it : job_list) {
-        if (it->getJobPid() == cmd->getPid()) {
-            return it;
-        }
-    }
-    return nullptr;
-}
-
 void JobsList::addJob(pid_t pid, string cmd_line, bool isStopped) {
     removeFinishedJobs();
     shared_ptr<JobsList::JobEntry> job = getJobByPid(pid);
@@ -940,7 +904,6 @@ void JobsList::addJob(pid_t pid, string cmd_line, bool isStopped) {
     shared_ptr<JobEntry> newJob = std::make_shared<JobEntry>(maximalJobId+1, pid, cmd_line);
     if (isStopped) {
         newJob->setJobStatus(STOPPED);
-        //stopJob(newJob);
     }
     maximalJobId++;
     job_list.push_back(newJob);
@@ -1049,18 +1012,6 @@ bool JobsList::isListEmpty() const {
     return job_list.empty();
 }
 
-bool JobsList::isJobInTheList(int job_id) {
-    for (auto & it : job_list)
-    {
-        if(it->getJobId()==job_id)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-
 std::vector<shared_ptr<JobsList::JobEntry>>& JobsList::get_Job_List() {
     return job_list;
 }
@@ -1096,19 +1047,10 @@ std::vector<JobsList::TimeoutEntry> &JobsList::getTimeoutEntries() {
 void JobsList::removeTimedJobByPid(pid_t pid) {
     for (auto it = timed_jobs.begin(); it != timed_jobs.end(); it++) {
         if (it->pid == pid) {
-            //to delete!!!
-            //std::cout << "In removed timed job, we are removing " << it->cmd_line << std::endl;
-            //not to delete
             timed_jobs.erase(it);
             return;
         }
     }
-    //to delete!!!
-//    std::cout << "After removing pid" << pid << " timed jobs are: " << std::endl;
-//    for (auto & process : timed_jobs) {
-//        std::cout << process.cmd_line << std::endl;
-//    }
-    //not to delete
 }
 
 bool JobsList::areThereTimedJobs() const {

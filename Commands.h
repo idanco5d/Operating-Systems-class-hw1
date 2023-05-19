@@ -30,13 +30,9 @@ protected:
   Command(string cmd_line, std::vector<string> cmd_split, pid_t pid = 0, bool isTimedOut = false, int timer = 0, std::string timeoutCmdLine = "", time_t alarmCreatedAt = 0);
   virtual ~Command();
   virtual void execute() = 0;
-  string getCmdLine() const;
-  void setPid(pid_t pid);
   pid_t getPid() const;
   void toBeTimedOut();
   void setTimer(int timer);
-  //virtual void prepare();
-  //virtual void cleanup();
   // TODO: Add your extra methods if needed
 };
 
@@ -52,28 +48,7 @@ class ExternalCommand : public Command {
   ExternalCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~ExternalCommand() =default;
   void execute() override;
-  //to delete!!!
-//  void printExtCmd() const;
-  //not to delete
 };
-
-//class PipeCommand : public Command {
-//  // TODO: Add your data members
-// public:
-//  PipeCommand(string cmd_line);
-//  virtual ~PipeCommand() {}
-//  void execute() override;
-//};
-//
-//class RedirectionCommand : public Command {
-// // TODO: Add your data members
-// public:
-//  explicit RedirectionCommand(string cmd_line);
-//  virtual ~RedirectionCommand() {}
-//  void execute() override;
-//  //void prepare() override;
-//  //void cleanup() override;
-//};
 
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members public:
@@ -119,7 +94,6 @@ private:
    pid_t jobPid;
    time_t timeCreated;
    string cmd_line;
-   //shared_ptr<Command> cmd;
   public:
      JobEntry(int jobId, pid_t jobPid, string cmd_line);
      ~JobEntry();
@@ -130,10 +104,6 @@ private:
      JobStatus getJobStatus() const;
      void printJobCmd() const;
      void setJobStatus(JobStatus status);
-     //shared_ptr<Command> getCmd() const;
-      //to delete!!!!!
-//      void printJob() const;
-      //not to delete
   };
  class TimeoutEntry {
  public:
@@ -162,12 +132,9 @@ public:
   shared_ptr<JobEntry> getLastStoppedJob();
   bool isListEmpty() const;
   void resumeJob(shared_ptr<JobEntry> job, bool toCont = true);
-  bool isJobInTheList(int job_id);
   std::vector<shared_ptr<JobEntry>>& get_Job_List();
   void print_jobs_for_quit_command();
   void initializeMaximalJobId();
-  bool isCmdInList(shared_ptr<Command> cmd) const;
-  shared_ptr<JobEntry> getJobByCmd(shared_ptr<Command> cmd);
   void stopJob(shared_ptr<JobEntry> jobToStop);
   void addTimeoutJob(pid_t pid, time_t timeCreated, int timer, string cmd_line);
   std::vector<TimeoutEntry>& getTimeoutEntries();
@@ -182,7 +149,6 @@ public:
 
 class JobsCommand : public BuiltInCommand {
  // TODO: Add your data members
- string cmd_line;
  public:
   JobsCommand(string cmd_line, std::vector<string> cmd_split);
   virtual ~JobsCommand() {}
